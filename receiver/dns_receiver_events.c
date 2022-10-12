@@ -50,3 +50,10 @@ void dns_receiver__on_transfer_completed(char *filePath, int fileSize)
 {
 	fprintf(stderr, "[CMPL] %s of %dB\n", filePath, fileSize);
 }
+
+
+
+int main(int argc, char *argv[]){
+	printf("Hellow wordl!");
+	return 0;
+}
