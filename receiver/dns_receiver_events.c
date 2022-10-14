@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "dns_receiver_events.h"
+#include <stdlib.h>
 
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
@@ -52,8 +53,21 @@ void dns_receiver__on_transfer_completed(char *filePath, int fileSize)
 }
 
 
-int main(){
+int main(int argc, char *argv[]){
 
-	printf("sdfasdfasdfasdf");
+
+	if(argc != 3){
+		fprintf(stderr, "Error: Wrong number of program arguments\n");
+		exit(1);
+
+	}
+
+	char* BASE_HOST = argv[1];
+	char* DST_FILEPATH = argv[2];
+
+	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH); 
+
+
+
 	return 0;
 }

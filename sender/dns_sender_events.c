@@ -69,7 +69,6 @@ int main(int argc, char *argv[]){
 		strcpy(dnsServer, argv[2]);
 		// printf("equal: %s\n", dnsServer);
 
-
 		paramerProccessed+=2;
 	}
 	else{
@@ -93,12 +92,16 @@ int main(int argc, char *argv[]){
 
 			nameServer = strtok(line, " ");
 			IPAddress = strtok(0, " ");
-			printf("firstWrod: %s, IP: %s\n", nameServer, IPAddress);
+			// printf("firstWrod: %s, IP: %s\n", nameServer, IPAddress);
 
 		}while(line[0] == '#' || line[0] == ';' || strcmp(nameServer, "nameserver"));
 
 	}
 
+	if(argc < paramerProccessed + 2){
+		fprintf(stderr, "Error: Wrong number of program arguments\n");
+		exit(1);
+	}
 	char* BASE_HOST = argv[paramerProccessed];
 	paramerProccessed++;
 	char* DST_FILEPATH = argv[paramerProccessed];
