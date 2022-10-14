@@ -4,6 +4,8 @@
 #include "dns_sender_events.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
 
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
@@ -58,14 +60,17 @@ void dns_sender__on_transfer_completed( char *filePath, int fileSize)
 int main(int argc, char *argv[]){
 
 	char *dnsServer = NULL;
+	int paramerProccessed = 1;
 
 	if(argc > 1 && !strcmp(argv[1], "-u")){
 		//DNS server from the command line
 		dnsServer = malloc(sizeof(char) * strlen(argv[2]));
 		memset(dnsServer,'\0' ,strlen(argv[2]));
 		strcpy(dnsServer, argv[2]);
-		printf("equal: %s\n", dnsServer);
+		// printf("equal: %s\n", dnsServer);
 
+
+		paramerProccessed+=2;
 	}
 	else{
 		//DNS server from the resolv.conf
@@ -93,5 +98,24 @@ int main(int argc, char *argv[]){
 		}while(line[0] == '#' || line[0] == ';' || strcmp(nameServer, "nameserver"));
 
 	}
+
+	char* BASE_HOST = argv[paramerProccessed];
+	paramerProccessed++;
+	char* DST_FILEPATH = argv[paramerProccessed];
+	paramerProccessed++;
+	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH);
+	bool readFromFILE = false;
+	char* SRC_FILEPATH = NULL;
+
+	if(argc != paramerProccessed){
+		readFromFILE = true;
+		SRC_FILEPATH = argv[paramerProccessed];
+		// printf("SRC_FILEPATH: %s\n", SRC_FILEPATH);
+		paramerProccessed++;
+	}
+
+
+
+
 	return 0;
 }
