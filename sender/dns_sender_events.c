@@ -11,7 +11,17 @@
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
 #define CREATE_IPV6STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET6, src, dst, NETADDR_STRLEN)
 
+struct dataStruct
+{
+	char* inputData;
+	int allocatedSpace;
+	int currentSpace;
+};
 
+/**
+ * 
+ * 
+*/
 void dns_sender__on_chunk_encoded(char *filePath, int chunkId, char *encodedData)
 {
 	fprintf(stderr, "[ENCD] %s %9d '%s'\n", filePath, chunkId, encodedData);
@@ -59,12 +69,27 @@ void dns_sender__on_transfer_completed( char *filePath, int fileSize)
 
 int main(int argc, char *argv[]){
 
+		//Prepare structure for loading data from FILE/STDIN
+	struct dataStruct data = {NULL, 0, 0};
+	data.inputData = malloc(sizeof(char) * 1024);
+	if(data.inputData == NULL){
+		fprintf(stderr, "INTERNAL ERROR: Malloc function ERROR\n");
+		exit(1);
+	}
+	memset(data.inputData, '\0', 1024);
+	data.allocatedSpace = 1024;
+	
 	char *dnsServer = NULL;
 	int paramerProccessed = 1;
 
+		//Process parameters of the program
 	if(argc > 1 && !strcmp(argv[1], "-u")){
 		//DNS server from the command line
 		dnsServer = malloc(sizeof(char) * strlen(argv[2]));
+		if(dnsServer == NULL){
+			fprintf(stderr, "INTERNAL ERROR: Malloc function ERROR\n");
+			exit(1);
+		}
 		memset(dnsServer,'\0' ,strlen(argv[2]));
 		strcpy(dnsServer, argv[2]);
 		// printf("equal: %s\n", dnsServer);
@@ -108,14 +133,51 @@ int main(int argc, char *argv[]){
 	paramerProccessed++;
 	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH);
 	bool readFromFILE = false;
-	char* SRC_FILEPATH = NULL;
+	FILE* SRC_FILEPATH = NULL;
 
 	if(argc != paramerProccessed){
 		readFromFILE = true;
-		SRC_FILEPATH = argv[paramerProccessed];
-		// printf("SRC_FILEPATH: %s\n", SRC_FILEPATH);
+		if((SRC_FILEPATH = fopen(argv[paramerProccessed], "r")) == NULL){
+			fprintf(stderr, "Error: Can't open input file\n");
+			exit(1);
+		}
 		paramerProccessed++;
 	}
+
+	int character;
+	if(!readFromFILE){
+		while((character = getc(stdin)) != EOF){
+
+			if(data.allocatedSpace == data.currentSpace){
+				if((data.inputData = realloc(data.inputData, sizeof(char)*2*data.allocatedSpace)) == NULL){
+					fprintf(stderr, "INTERNAL ERROR: Realloc error\n");
+				}
+				data.allocatedSpace*=2;
+				// printf("REALLOC\n");
+			}
+
+			data.inputData[data.currentSpace] = character;
+			data.currentSpace++;
+		}
+	}
+	else{
+		while((character = getc(SRC_FILEPATH)) != EOF){
+
+			if(data.allocatedSpace == data.currentSpace){
+				if((data.inputData = realloc(data.inputData, sizeof(char)*2*data.allocatedSpace)) == NULL){
+					fprintf(stderr, "INTERNAL ERROR: Realloc error\n");
+				}
+				data.allocatedSpace*=2;
+			}
+			
+			data.inputData[data.currentSpace] = character;
+			data.currentSpace++;
+		}
+
+	}
+
+	printf("data: %s\n", data.inputData);
+
 
 
 

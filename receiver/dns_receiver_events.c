@@ -8,6 +8,14 @@
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
 #define CREATE_IPV6STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET6, src, dst, NETADDR_STRLEN)
 
+
+
+struct dataStruct
+{
+	char* inputData;
+	int allocatedSpace;
+};
+
 void dns_receiver__on_query_parsed(char *filePath, char *encodedData)
 {
 	fprintf(stderr, "[PARS] %s '%s'\n", filePath, encodedData);
@@ -59,7 +67,6 @@ int main(int argc, char *argv[]){
 	if(argc != 3){
 		fprintf(stderr, "Error: Wrong number of program arguments\n");
 		exit(1);
-
 	}
 
 	char* BASE_HOST = argv[1];
