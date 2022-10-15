@@ -3,6 +3,9 @@
 #include <sys/socket.h>
 #include "dns_receiver_events.h"
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <errno.h>
 
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
@@ -73,6 +76,54 @@ int main(int argc, char *argv[]){
 	char* DST_FILEPATH = argv[2];
 
 	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH); 
+
+
+
+	int serverSocket;
+	char buffer[1024];
+	struct sockaddr_in serverAddr, clientAddr;
+
+	if((serverSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+		fprintf(stderr, "ERROR: Failed to create socket\n");
+		exit(1);
+	}
+
+	memset(&serverAddr, 0, sizeof(serverAddr)); 
+    memset(&clientAddr, 0, sizeof(clientAddr)); 
+
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(53);
+	serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+	// int optval = 1;	
+	// if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (const void *)&optval, sizeof(int)))
+	// {
+	// 	fprintf(stderr, "ERROR in setsockopt function\n");
+	// 	exit(1);
+	// }
+
+	int returnCode = 0;
+	if((returnCode = bind(serverSocket, (const struct sockaddr *)&serverAddr, sizeof(serverAddr))) < 0){
+
+		fprintf(stderr, "ERROR: Failed to bind, %s\n", strerror(errno));
+		exit(1);
+	}
+	printf("Binding succesfull\n");
+
+	int lenght = sizeof(clientAddr);
+	int numOfBytesReceived = 0;
+	while(true){
+		memset(buffer, '\0', sizeof(buffer));
+		numOfBytesReceived = recvfrom(serverSocket, (char *)buffer, 1024, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
+		printf("Client: %s\n", buffer);
+
+
+	}
+
+
+	
+
+
 
 
 

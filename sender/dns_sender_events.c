@@ -172,11 +172,14 @@ int main(int argc, char *argv[]){
 	 * @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
 	*/
 	struct sockaddr_in destination;
-	int client_socket;
+	int clientSocket;
+	char buffer[1024];
+	struct DNS_HEADER *dnsHeader = NULL;
+	dnsHeader = (struct DNS_HEADER *)&buffer;
 
-	if((client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) <= 0)
+	if((clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) <= 0)
 	{
-		fprintf(stderr, "ERROR socket creating\n");
+		fprintf(stderr, "ERROR: Failed to create socket\n");
 		exit(1);
 	}
 
@@ -186,9 +189,6 @@ int main(int argc, char *argv[]){
 	// printf("IPADDRESS: %s\n", dnsServer);
 	destination.sin_addr.s_addr = inet_addr(dnsServer);
   
-	char buffer[1024];
-	struct DNS_HEADER *dnsHeader = NULL;
-	dnsHeader = (struct DNS_HEADER *)&buffer;
 
 	dnsHeader->id = htons(1337);
 	dnsHeader->qr = 0; 
@@ -206,7 +206,7 @@ int main(int argc, char *argv[]){
 	dnsHeader->ans_count = 0;
 	dnsHeader->auth_count = 0;
 	dnsHeader->add_count = 0;
-	// if(sendto(client_socket, ))
+	// if(sendto(clientSocket, ))
 
 	char *qname = NULL;
 	
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]){
 	qinfo->qclass = htons(1); //its internet (lol)
 
 
-	if(sendto(client_socket, (char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+	if(sendto(clientSocket, (char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 
 		fprintf(stderr, "Error; SENDTO failed");
 		exit(1);
