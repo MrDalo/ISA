@@ -95,12 +95,12 @@ int main(int argc, char *argv[]){
 	serverAddr.sin_port = htons(53);
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 
-	// int optval = 1;	
-	// if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, (const void *)&optval, sizeof(int)))
-	// {
-	// 	fprintf(stderr, "ERROR in setsockopt function\n");
-	// 	exit(1);
-	// }
+	int optval = 1;	
+	if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int)))
+	{
+		fprintf(stderr, "ERROR in setsockopt function\n");
+		exit(1);
+	}
 
 	int returnCode = 0;
 	if((returnCode = bind(serverSocket, (const struct sockaddr *)&serverAddr, sizeof(serverAddr))) < 0){
@@ -116,6 +116,7 @@ int main(int argc, char *argv[]){
 		memset(buffer, '\0', sizeof(buffer));
 		numOfBytesReceived = recvfrom(serverSocket, (char *)buffer, 1024, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
 		printf("Client: %s\n", buffer);
+		printf("Bytes: %i\n", numOfBytesReceived);
 
 
 	}

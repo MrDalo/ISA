@@ -174,6 +174,7 @@ int main(int argc, char *argv[]){
 	struct sockaddr_in destination;
 	int clientSocket;
 	char buffer[1024];
+	memset(buffer,'\0', 1024);
 	struct DNS_HEADER *dnsHeader = NULL;
 	dnsHeader = (struct DNS_HEADER *)&buffer;
 
@@ -188,6 +189,7 @@ int main(int argc, char *argv[]){
 	destination.sin_port = htons(53);
 	// printf("IPADDRESS: %s\n", dnsServer);
 	destination.sin_addr.s_addr = inet_addr(dnsServer);
+
   
 
 	dnsHeader->id = htons(1337);
@@ -206,7 +208,6 @@ int main(int argc, char *argv[]){
 	dnsHeader->ans_count = 0;
 	dnsHeader->auth_count = 0;
 	dnsHeader->add_count = 0;
-	// if(sendto(clientSocket, ))
 
 	char *qname = NULL;
 	
@@ -219,12 +220,14 @@ int main(int argc, char *argv[]){
 
 	qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
 
-	// qinfo->qtype = htons( query_type ); //type of the query , A , MX , CNAME , NS etc
 	qinfo->qtype = htons(1); 
-	qinfo->qclass = htons(1); //its internet (lol)
+	qinfo->qclass = htons(1); 
+	// buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION)+1] = 'A';
+	// strcpy(buffer, "AHOJ ako sa mas");
+	// if(sendto(clientSocket, (char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+	strcat(buffer, data.inputData);
 
-
-	if(sendto(clientSocket, (char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+	if(sendto(clientSocket, (char*)buffer, 1024, 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 
 		fprintf(stderr, "Error; SENDTO failed");
 		exit(1);

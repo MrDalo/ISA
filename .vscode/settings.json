@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "inet.h": "c",
+        "stdio.h": "c",
+        "dns_receiver_events.h": "c",
+        "in.h": "c"
+    }
+}
