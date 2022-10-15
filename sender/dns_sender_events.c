@@ -6,22 +6,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
 #define CREATE_IPV6STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET6, src, dst, NETADDR_STRLEN)
 
-struct dataStruct
-{
-	char* inputData;
-	int allocatedSpace;
-	int currentSpace;
-};
 
-/**
- * 
- * 
-*/
 void dns_sender__on_chunk_encoded(char *filePath, int chunkId, char *encodedData)
 {
 	fprintf(stderr, "[ENCD] %s %9d '%s'\n", filePath, chunkId, encodedData);
@@ -79,6 +68,7 @@ int main(int argc, char *argv[]){
 	memset(data.inputData, '\0', 1024);
 	data.allocatedSpace = 1024;
 	
+	char *nameServer = NULL;
 	char *dnsServer = NULL;
 	int paramerProccessed = 1;
 
@@ -108,15 +98,13 @@ int main(int argc, char *argv[]){
 		}
 
 
-		char *nameServer = NULL;
-		char *IPAddress = NULL;
 
 		do{
 			memset(line, '\0', 300);
 			fgets(line, 300, file);
 
 			nameServer = strtok(line, " ");
-			IPAddress = strtok(0, " ");
+			dnsServer = strtok(0, " ");
 			// printf("firstWrod: %s, IP: %s\n", nameServer, IPAddress);
 
 		}while(line[0] == '#' || line[0] == ';' || strcmp(nameServer, "nameserver"));
@@ -169,7 +157,7 @@ int main(int argc, char *argv[]){
 				}
 				data.allocatedSpace*=2;
 			}
-			
+
 			data.inputData[data.currentSpace] = character;
 			data.currentSpace++;
 		}
@@ -180,7 +168,68 @@ int main(int argc, char *argv[]){
 
 
 
+	/**
+	 * @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+	*/
+	struct sockaddr_in destination;
+	int client_socket;
 
+	if((client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) <= 0)
+	{
+		fprintf(stderr, "ERROR socket creating\n");
+		exit(1);
+	}
+
+
+	destination.sin_family = AF_INET;
+	destination.sin_port = htons(53);
+	// printf("IPADDRESS: %s\n", dnsServer);
+	destination.sin_addr.s_addr = inet_addr(dnsServer);
+  
+	char buffer[1024];
+	struct DNS_HEADER *dnsHeader = NULL;
+	dnsHeader = (struct DNS_HEADER *)&buffer;
+
+	dnsHeader->id = htons(1337);
+	dnsHeader->qr = 0; 
+	dnsHeader->opcode = 0; 
+	dnsHeader->aa = 0; 
+	dnsHeader->tc = 0; 
+	dnsHeader->rd = 1; 
+	dnsHeader->ra = 0; 
+	dnsHeader->z = 0;
+	dnsHeader->ad = 0;
+	dnsHeader->cd = 0;
+	dnsHeader->rcode = 0;
+	dnsHeader->q_count = htons(1); //we have only 1 question
+	// dnsHeader->q_count = 0; //we have only 1 question
+	dnsHeader->ans_count = 0;
+	dnsHeader->auth_count = 0;
+	dnsHeader->add_count = 0;
+	// if(sendto(client_socket, ))
+
+	char *qname = NULL;
+	
+	qname = malloc(sizeof(char) * 20);
+	memset(qname, '\0', 20);
+	strcpy(qname, "3www6google3com");
+
+	struct QUESTION *qinfo = NULL;
+	qname =(unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+
+	qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
+
+	// qinfo->qtype = htons( query_type ); //type of the query , A , MX , CNAME , NS etc
+	qinfo->qtype = htons(1); 
+	qinfo->qclass = htons(1); //its internet (lol)
+
+
+	if(sendto(client_socket, (char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+
+		fprintf(stderr, "Error; SENDTO failed");
+		exit(1);
+	}
+	printf("SENDTO succed\n");
 
 	return 0;
 }
