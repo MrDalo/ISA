@@ -3,8 +3,10 @@
 #include <sys/socket.h>
 #include "dns_sender_events.h"
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
@@ -53,6 +55,31 @@ void dns_sender__on_transfer_init6(struct in6_addr *dest)
 void dns_sender__on_transfer_completed( char *filePath, int fileSize)
 {
 	fprintf(stderr, "[CMPL] %s of %dB\n", filePath, fileSize);
+}
+
+
+void ChangetoDnsNameFormat(char* dns, char* host) 
+{
+	int lock = 0 , i;
+	strcat((char*)host,".");
+	char help[5];
+	
+	for(i = 0 ; i < strlen((char*)host) ; i++) 
+	{
+
+		if(host[i]=='.') 
+		{
+			sprintf(help, "%x", i-lock);
+			strcat((char*)dns, help);
+			*dns++;
+			for(;lock<i;lock++) 
+			{
+				*dns++=host[lock];
+			}
+			lock++;
+		}
+	}
+	*dns++='0';
 }
 
 
@@ -105,11 +132,12 @@ int main(int argc, char *argv[]){
 
 			nameServer = strtok(line, " ");
 			dnsServer = strtok(0, " ");
-			// printf("firstWrod: %s, IP: %s\n", nameServer, IPAddress);
+			// printf("firstWrod: %s, IP: %s\n", nameServer, dnsServer);
 
 		}while(line[0] == '#' || line[0] == ';' || strcmp(nameServer, "nameserver"));
 
 	}
+	
 
 	if(argc < paramerProccessed + 2){
 		fprintf(stderr, "Error: Wrong number of program arguments\n");
@@ -131,6 +159,8 @@ int main(int argc, char *argv[]){
 		}
 		paramerProccessed++;
 	}
+
+	
 
 	int character;
 	if(!readFromFILE){
@@ -164,6 +194,7 @@ int main(int argc, char *argv[]){
 
 	}
 
+	
 	printf("data: %s\n", data.inputData);
 
 
@@ -171,28 +202,32 @@ int main(int argc, char *argv[]){
 	/**
 	 * @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
 	*/
+	
 	struct sockaddr_in destination;
 	int clientSocket;
-	char buffer[1024];
-	memset(buffer,'\0', 1024);
-	struct DNS_HEADER *dnsHeader = NULL;
-	dnsHeader = (struct DNS_HEADER *)&buffer;
 
+	
+	
 	if((clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) <= 0)
 	{
 		fprintf(stderr, "ERROR: Failed to create socket\n");
 		exit(1);
 	}
+	
 
 
+	printf("DNSServer: %s\n", dnsServer);
 	destination.sin_family = AF_INET;
 	destination.sin_port = htons(53);
-	// printf("IPADDRESS: %s\n", dnsServer);
 	destination.sin_addr.s_addr = inet_addr(dnsServer);
 
   
+	unsigned char buffer[512];
+	memset(buffer,'\0', 512);
+	struct DNS_HEADER *dnsHeader = NULL;
+	dnsHeader = (struct DNS_HEADER *)&buffer;
 
-	dnsHeader->id = htons(1337);
+	dnsHeader->id = (unsigned short) htons(getpid());
 	dnsHeader->qr = 0; 
 	dnsHeader->opcode = 0; 
 	dnsHeader->aa = 0; 
@@ -209,25 +244,22 @@ int main(int argc, char *argv[]){
 	dnsHeader->auth_count = 0;
 	dnsHeader->add_count = 0;
 
-	char *qname = NULL;
-	
-	qname = malloc(sizeof(char) * 20);
-	memset(qname, '\0', 20);
-	strcpy(qname, "3www6google3com");
+	unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+	ChangetoDnsNameFormat(qname , BASE_HOST);
+	printf("QNAME: %s\n", qname);
 
 	struct QUESTION *qinfo = NULL;
-	qname =(unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+	// qname =(unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 
 	qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
 
 	qinfo->qtype = htons(1); 
 	qinfo->qclass = htons(1); 
-	// buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION)+1] = 'A';
-	// strcpy(buffer, "AHOJ ako sa mas");
-	// if(sendto(clientSocket, (char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
-	strcat(buffer, data.inputData);
-
-	if(sendto(clientSocket, (char*)buffer, 1024, 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+	
+	// strcat(buffer, data.inputData);
+	// printf("sizeof: %ld\n", sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION));
+	// printf("buffer3: %s\n", buffer);
+	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 
 		fprintf(stderr, "Error; SENDTO failed");
 		exit(1);

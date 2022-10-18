@@ -7,11 +7,31 @@
 #include <string.h>
 #include <errno.h>
 
+#include <sys/types.h>
+
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
 #define CREATE_IPV6STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET6, src, dst, NETADDR_STRLEN)
 
 
+void print_buffer(unsigned char *buffer, size_t len) {
+  unsigned char preview[17];
+  preview[16] = '\0';
+  memset(preview, ' ', 16);
+  for (int i = 0; i < len; ++i) {
+    if (i && i % 16 == 0) {
+      printf(" %s\n", preview);
+      memset(preview, ' ', 16);
+    }
+    unsigned char c = buffer[i];
+    printf("%02x ", c);
+    preview[i % 16] = (c == ' ' || (c >= '!' && c < '~')) ? c : '.';
+  }
+  for (int i = 0; i < 16 - len % 16; ++i) {
+    printf("   ");
+  }
+  printf(" %s\n", preview);
+}
 
 struct dataStruct
 {
@@ -80,7 +100,7 @@ int main(int argc, char *argv[]){
 
 
 	int serverSocket;
-	char buffer[1024];
+	unsigned char buffer[512];
 	struct sockaddr_in serverAddr, clientAddr;
 
 	if((serverSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
@@ -93,6 +113,7 @@ int main(int argc, char *argv[]){
 
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(53);
+	// serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 
 	int optval = 1;	
@@ -114,11 +135,21 @@ int main(int argc, char *argv[]){
 	int numOfBytesReceived = 0;
 	while(true){
 		memset(buffer, '\0', sizeof(buffer));
-		numOfBytesReceived = recvfrom(serverSocket, (char *)buffer, 1024, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
+		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
 		printf("Client: %s\n", buffer);
 		printf("Bytes: %i\n", numOfBytesReceived);
 
+		unsigned char client_addr_str[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &(clientAddr.sin_addr), client_addr_str, INET_ADDRSTRLEN);
+		printf("---------------------------\nReceived %d bytes from %s\n",
+           numOfBytesReceived, client_addr_str);
 
+
+		print_buffer(buffer, numOfBytesReceived);
+
+		struct dns_header *header = (struct dns_header *)buffer;
+
+		
 	}
 
 
