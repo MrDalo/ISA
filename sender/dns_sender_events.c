@@ -149,9 +149,11 @@ int main(int argc, char *argv[]){
 	}
 	char* BASE_HOST = argv[paramerProccessed];
 	paramerProccessed++;
-	char* DST_FILEPATH = argv[paramerProccessed];
+	char DST_FILEPATH[strlen(argv[paramerProccessed])];
+	strcpy(DST_FILEPATH, argv[paramerProccessed]);
+
 	paramerProccessed++;
-	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH);
+	printf("1BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
 	bool readFromFILE = false;
 	FILE* SRC_FILEPATH = NULL;
 
@@ -199,8 +201,8 @@ int main(int argc, char *argv[]){
 	}
 
 	
-	printf("data: %s\n", data.inputData);
-
+	// printf("data: %s\n", data.inputData);
+	printf("2BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
 
 
 	/**
@@ -210,22 +212,19 @@ int main(int argc, char *argv[]){
 	struct sockaddr_in destination;
 	int clientSocket;
 
-	
-	
 	if((clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) <= 0)
 	{
 		fprintf(stderr, "ERROR: Failed to create socket\n");
 		exit(1);
 	}
-	
 
-
-	printf("DNSServer: %s\n", dnsServer);
 	destination.sin_family = AF_INET;
 	destination.sin_port = htons(53);
 	destination.sin_addr.s_addr = inet_addr(dnsServer);
 
-  
+	dns_sender__on_transfer_init(&(destination.sin_addr));
+	
+		//INIT PACKET
 	unsigned char buffer[512];
 	memset(buffer,'\0', 512);
 	struct DNS_HEADER *dnsHeader = NULL;
@@ -242,36 +241,31 @@ int main(int argc, char *argv[]){
 	dnsHeader->ad = 0;
 	dnsHeader->cd = 0;
 	dnsHeader->rcode = 0;
-	dnsHeader->q_count = htons(1); //we have only 1 question
-	// dnsHeader->q_count = 0; //we have only 1 question
+	dnsHeader->q_count = htons(1); 
 	dnsHeader->ans_count = 0;
 	dnsHeader->auth_count = 0;
 	dnsHeader->add_count = 0;
 
 	unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 	unsigned char baseHostForQname[253] ={'\0'};
-	unsigned char base32_data_buf[253] = {'\0'};
-	// unsigned char base32_data_buf[253];
 
 
+	printf("3BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
 	ChangetoDnsNameFormat(baseHostForQname , BASE_HOST);
-	printf("arrayForQname: %s\n", baseHostForQname);
-	// strcat(qname, data.inputData);
-	// strcat(qname, baseHostForQname);
+	printf("4BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
+	
+	// printf("arrayForQname: %s\n", baseHostForQname);
 
-	// ChangetoDnsNameFormat(qname , BASE_HOST);
-	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname));
-	printf("neededDataLenght: %d\n", neededDataLength);
-	int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 256);
+	// int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname));
+	// printf("neededDataLenght: %d\n", neededDataLength);
+	// int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 256);
 
-	// printf("BSA32_DATA_BUF: %s\n", base32_data_buf);
-	strcat(qname, base32_data_buf);
-	strcat(qname, baseHostForQname);	
-	printf("QNAME: %s, numbeOfWritenChars: %d\n", qname, numberOfWritenChars);
+	// strcat(qname, base32_data_buf);
+	// strcat(qname, baseHostForQname);	
+	// printf("QNAME: %s, numbeOfWritenChars: %d\n", qname, numberOfWritenChars);
 
-
-
-
+	sprintf(qname, "INIT PACKET PATH[%s]", DST_FILEPATH);
+	strcat(qname, baseHostForQname);
 
 	struct QUESTION *qinfo = NULL;
 	qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
@@ -287,7 +281,60 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "Error; SENDTO failed");
 		exit(1);
 	}
-	printf("SENDTO succed\n");
+	// printf("SENDTO succed\n");
 
+		//DATA PACKET
+	memset(buffer,'\0', 512);
+	dnsHeader = (struct DNS_HEADER *)&buffer;
+
+	dnsHeader->id = (unsigned short) htons(getpid());
+	dnsHeader->qr = 0; 
+	dnsHeader->opcode = 0; 
+	dnsHeader->aa = 0; 
+	dnsHeader->tc = 0; 
+	dnsHeader->rd = 1; 
+	dnsHeader->ra = 0; 
+	dnsHeader->z = 0;
+	dnsHeader->ad = 0;
+	dnsHeader->cd = 0;
+	dnsHeader->rcode = 0;
+	dnsHeader->q_count = htons(1); 
+	dnsHeader->ans_count = 0;
+	dnsHeader->auth_count = 0;
+	dnsHeader->add_count = 0;
+
+	unsigned char base32_data_buf[253] = {'\0'};
+
+	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname));
+	int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 256);
+	
+	dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, base32_data_buf);
+	
+	strcat(qname, base32_data_buf);
+	strcat(qname, baseHostForQname);
+
+	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+
+		fprintf(stderr, "Error; SENDTO failed");
+		exit(1);
+	}
+
+	dns_sender__on_chunk_sent(&(destination.sin_addr) ,DST_FILEPATH, dnsHeader->id, strlen(buffer)*sizeof(char));
+
+		//FINAL PACKET
+	memset(buffer,'\0', 512);
+	dnsHeader->id = (unsigned short) htons(getpid());
+	strcat(qname, "[END PACKET]");
+	strcat(qname, baseHostForQname);
+
+	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+
+		fprintf(stderr, "Error; SENDTO failed");
+		exit(1);
+	}
+
+	dns_sender__on_transfer_completed(DST_FILEPATH, strlen(data.inputData) * sizeof(char));
+
+	
 	return 0;
 }
