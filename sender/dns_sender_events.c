@@ -67,15 +67,16 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 	int lock = 0 , i;
 	strcat((char*)host,".");
 	char help[5];
+	unsigned char *ptr = NULL;
 	
 	for(i = 0 ; i < strlen((char*)host) ; i++) 
 	{
 
 		if(host[i]=='.') 
 		{
-			sprintf(help, "%x", i-lock);
-			strcat((char*)dns, help);
-			*dns++;
+			// sprintf(help, "%x", i-lock);
+			// strcat((char*)dns, help);
+			*dns++=(unsigned char)(i-lock);
 			for(;lock<i;lock++) 
 			{
 				*dns++=host[lock];
@@ -83,7 +84,7 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 			lock++;
 		}
 	}
-	*dns++='0';
+	*dns++=(unsigned char)(0);
 }
 
 
@@ -264,7 +265,7 @@ int main(int argc, char *argv[]){
 	// strcat(qname, baseHostForQname);	
 	// printf("QNAME: %s, numbeOfWritenChars: %d\n", qname, numberOfWritenChars);
 
-	sprintf(qname, "INIT PACKET PATH[%s]", DST_FILEPATH);
+	// sprintf(qname, "INIT PACKET PATH[%s]", DST_FILEPATH);
 	strcat(qname, baseHostForQname);
 
 	struct QUESTION *qinfo = NULL;

@@ -3,7 +3,7 @@ CFLAGS = -std=c99
 
 
 
-all: receiver sender
+all: receiver sender clean
 
 
 receiver: base32.o dns_receiver_events.o
@@ -24,3 +24,6 @@ dns_sender_events.o: ./sender/dns_sender_events.c
 
 base32.o: base32.c
 	gcc $(CFLAGS) -c $^ -o base32.o
+
+clean: 
+	rm *.o
