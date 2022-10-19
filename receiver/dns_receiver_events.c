@@ -175,17 +175,16 @@ int main(int argc, char *argv[]){
 		print_buffer(buffer, numOfBytesReceived);
 
 		struct DNS_HEADER *header = (struct DNS_HEADER *)buffer;
-		printf("header id: %d\n", header->id);
+		// printf("header id: %d\n", header->id);
 
 		char qname [253];
 		memset(qname, '\0', 253);
 		char *dns_query = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
-		printf("dns_quey: %s\n", dns_query);
+		// printf("dns_quey: %s\n", dns_query);
 		ChangetoDnsNameFormat(qname, BASE_HOST);
-		printf("BASE_HOST: %s\n", BASE_HOST);
-		printf("qname: %s\n", qname);
+		// printf("BASE_HOST: %s\n", BASE_HOST);
+		// printf("qname: %s\n", qname);
 		char *index = strstr(dns_query, qname);
-		printf("index: %p\n", index);
 		
 		int iteration = 0;
 		char data[253];

@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include "../base32.h"
+#include <math.h>
 
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
@@ -248,14 +249,16 @@ int main(int argc, char *argv[]){
 	dnsHeader->add_count = 0;
 
 	unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
-	unsigned char arrayForQname[253] ={'\0'};
+	unsigned char baseHostForQname[253] ={'\0'};
 
-	ChangetoDnsNameFormat(arrayForQname , BASE_HOST);
-	printf("arrayForQname: %s\n", arrayForQname);
+	ChangetoDnsNameFormat(baseHostForQname , BASE_HOST);
+	printf("arrayForQname: %s\n", baseHostForQname);
 	strcat(qname, data.inputData);
-	strcat(qname, arrayForQname);
+	strcat(qname, baseHostForQname);
 
 	// ChangetoDnsNameFormat(qname , BASE_HOST);
+	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname));
+	printf("neededDataLenght: %d\n", neededDataLength);
 	printf("QNAME: %s\n", qname);
 
 	struct QUESTION *qinfo = NULL;
