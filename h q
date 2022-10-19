@@ -1,0 +1,71 @@
+[33mcommit 9f3dd6e86a65537876cfa5b2e7158d18597de24b[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Tue Oct 18 15:46:30 2022 +0200
+
+    Add qname format
+
+[33mcommit a05fa37f6a985c4e6e1240a1b680b76f68bca039[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Sat Oct 15 16:30:37 2022 +0200
+
+    Create first connection
+
+[33mcommit 8dcc491dd1e42c50e405c0ef1cbfb506f80ebe67[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Sat Oct 15 15:04:48 2022 +0200
+
+    Commit before VPS
+
+[33mcommit 03111ccceb4df7ba4580bec8bac5085cfac52287[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Sat Oct 15 13:33:34 2022 +0200
+
+    Probably finished sending of thhe first package from sender
+
+[33mcommit a21e7e99afb66f2d09844e8d337337d3b074e47d[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Sat Oct 15 10:18:17 2022 +0200
+
+    Load data from file/stdin
+
+[33mcommit c07c0b03b92eb99507a4694d62fd250f0ad53d9c[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Fri Oct 14 23:59:18 2022 +0200
+
+    Fisnihed processing arguments of both files
+
+[33mcommit 2576a61c8f321068b818b95fff78485cf57f8ffd[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Fri Oct 14 23:51:47 2022 +0200
+
+    Proccessed argumetns of sender
+
+[33mcommit 670d8a9446ba2f58ba77f491c740a81a048a5556[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Fri Oct 14 23:37:11 2022 +0200
+
+    Proccess -u parameter
+
+[33mcommit b490477ac1d09ab66640544ef551453261418c14[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Wed Oct 12 08:45:41 2022 +0200
+
+    New source files
+
+[33mcommit 01dfc86a78c612e4de265b6684ceeed6420f2878[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Wed Oct 12 08:17:32 2022 +0200
+
+    Created Makefile
+
+[33mcommit 7f3c023a71900e0e9bd451efdce993728a2904c7[m
+Author: MrDalo <dadokralik@gmail.com>
+Date:   Wed Oct 12 07:44:54 2022 +0200
+
+    Add source files
+
+[33mcommit b1c01ef9f154690b6ac0987bb68b93eb9b0100b6[m
+Author: Dalibor Králik <80037964+MrDalo@users.noreply.github.com>
+Date:   Wed Oct 12 07:39:38 2022 +0200
+
+    Initial commit

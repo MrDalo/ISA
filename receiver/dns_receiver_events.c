@@ -33,6 +33,31 @@ void print_buffer(unsigned char *buffer, size_t len) {
   printf(" %s\n", preview);
 }
 
+void ChangetoDnsNameFormat(char* dns, char* host) 
+{
+	int lock = 0 , i;
+	strcat((char*)host,".");
+	char help[5];
+	
+	for(i = 0 ; i < strlen((char*)host) ; i++) 
+	{
+
+		if(host[i]=='.') 
+		{
+			sprintf(help, "%x", i-lock);
+			strcat((char*)dns, help);
+			*dns++;
+			for(;lock<i;lock++) 
+			{
+				*dns++=host[lock];
+			}
+			lock++;
+		}
+	}
+	host[strlen((char *)host) - 1] = '\0';
+	*dns++='0';
+}
+
 struct dataStruct
 {
 	char* inputData;
@@ -147,7 +172,26 @@ int main(int argc, char *argv[]){
 
 		print_buffer(buffer, numOfBytesReceived);
 
-		struct dns_header *header = (struct dns_header *)buffer;
+		struct DNS_HEADER *header = (struct DNS_HEADER *)buffer;
+		printf("header id: %d\n", header->id);
+
+		char qname [253];
+		memset(qname, '\0', 253);
+		char *dns_query = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+		printf("dns_quey: %s\n", dns_query);
+		ChangetoDnsNameFormat(qname, BASE_HOST);
+		printf("BASE_HOST: %s\n", BASE_HOST);
+		printf("qname: %s\n", qname);
+		char *index = strstr(dns_query, qname);
+		printf("index: %p\n", index);
+		
+		int iteration = 0;
+		while(&(dns_query[iteration]) != index){
+			printf("%c", dns_query[iteration]);
+			iteration++;
+
+		}
+		printf("header id: %d\n", header->id);
 
 		
 	}
