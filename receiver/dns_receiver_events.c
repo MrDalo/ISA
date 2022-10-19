@@ -6,12 +6,14 @@
 #include <stdbool.h>
 #include <string.h>
 #include <errno.h>
-
+#include "../base32.h"
 #include <sys/types.h>
 
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
 #define CREATE_IPV6STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET6, src, dst, NETADDR_STRLEN)
+#define BASE32_LENGTH_ENCODE(src_size) (((src_size)*8 + 4) / 5)
+#define BASE32_LENGTH_DECODE(src_size) (ceil((src_size)) / 1.6)
 
 
 void print_buffer(unsigned char *buffer, size_t len) {
@@ -186,12 +188,16 @@ int main(int argc, char *argv[]){
 		printf("index: %p\n", index);
 		
 		int iteration = 0;
+		char data[253];
+		memset(data, '\0', 253);
 		while(&(dns_query[iteration]) != index){
-			printf("%c", dns_query[iteration]);
+			// printf("%c", dns_query[iteration]);
+			data[iteration] = dns_query[iteration];
+			
 			iteration++;
 
 		}
-		printf("header id: %d\n", header->id);
+		printf("DATA: %s\n", data);
 
 		
 	}

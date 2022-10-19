@@ -7,10 +7,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include "../base32.h"
 
 #define NETADDR_STRLEN (INET6_ADDRSTRLEN > INET_ADDRSTRLEN ? INET6_ADDRSTRLEN : INET_ADDRSTRLEN)
 #define CREATE_IPV4STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET, src, dst, NETADDR_STRLEN)
 #define CREATE_IPV6STR(dst, src) char dst[NETADDR_STRLEN]; inet_ntop(AF_INET6, src, dst, NETADDR_STRLEN)
+#define BASE32_LENGTH_ENCODE(src_size) (((src_size)*8 + 4) / 5)
+#define BASE32_LENGTH_DECODE(src_size) (ceil((src_size)) / 1.6)
 
 
 void dns_sender__on_chunk_encoded(char *filePath, int chunkId, char *encodedData)
@@ -245,7 +248,14 @@ int main(int argc, char *argv[]){
 	dnsHeader->add_count = 0;
 
 	unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
-	ChangetoDnsNameFormat(qname , BASE_HOST);
+	unsigned char arrayForQname[253] ={'\0'};
+
+	ChangetoDnsNameFormat(arrayForQname , BASE_HOST);
+	printf("arrayForQname: %s\n", arrayForQname);
+	strcat(qname, data.inputData);
+	strcat(qname, arrayForQname);
+
+	// ChangetoDnsNameFormat(qname , BASE_HOST);
 	printf("QNAME: %s\n", qname);
 
 	struct QUESTION *qinfo = NULL;
