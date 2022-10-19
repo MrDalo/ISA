@@ -250,20 +250,30 @@ int main(int argc, char *argv[]){
 
 	unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 	unsigned char baseHostForQname[253] ={'\0'};
+	unsigned char base32_data_buf[253] = {'\0'};
+	// unsigned char base32_data_buf[253];
+
 
 	ChangetoDnsNameFormat(baseHostForQname , BASE_HOST);
 	printf("arrayForQname: %s\n", baseHostForQname);
-	strcat(qname, data.inputData);
-	strcat(qname, baseHostForQname);
+	// strcat(qname, data.inputData);
+	// strcat(qname, baseHostForQname);
 
 	// ChangetoDnsNameFormat(qname , BASE_HOST);
 	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname));
 	printf("neededDataLenght: %d\n", neededDataLength);
-	printf("QNAME: %s\n", qname);
+	int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 256);
+
+	// printf("BSA32_DATA_BUF: %s\n", base32_data_buf);
+	strcat(qname, base32_data_buf);
+	strcat(qname, baseHostForQname);	
+	printf("QNAME: %s, numbeOfWritenChars: %d\n", qname, numberOfWritenChars);
+
+
+
+
 
 	struct QUESTION *qinfo = NULL;
-	// qname =(unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
-
 	qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
 
 	qinfo->qtype = htons(1); 

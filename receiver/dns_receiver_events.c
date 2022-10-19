@@ -187,7 +187,7 @@ int main(int argc, char *argv[]){
 		char *index = strstr(dns_query, qname);
 		
 		int iteration = 0;
-		char data[253];
+		unsigned char data[253];
 		memset(data, '\0', 253);
 		while(&(dns_query[iteration]) != index){
 			// printf("%c", dns_query[iteration]);
@@ -197,6 +197,10 @@ int main(int argc, char *argv[]){
 
 		}
 		printf("DATA: %s\n", data);
+		unsigned char decodedData[253] ={'\0'};
+		
+		base32_decode(data, decodedData, 253);
+		printf("decodedData: %s\n", decodedData);
 
 		
 	}
