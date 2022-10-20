@@ -316,7 +316,7 @@ int main(int argc, char *argv[]){
 		// printf("strlen after: %s\n", (data.inputData));
 		
 		ChangeBufferToDNSFormat(base32_data_buf);
-		
+		printf("prvy znak %i\n", (int)base32_data_buf[0]);
 		strcat(qname, base32_data_buf);
 		strcat(qname, baseHostForQname);
 		dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);

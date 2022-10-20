@@ -164,7 +164,13 @@ int main(int argc, char *argv[]){
 	memset(qname, '\0', 253);
 	ChangetoDnsNameFormat(qname, BASE_HOST);
 	printf("qname: %s\n", qname);
+
+
 	
+	unsigned char data[253];
+	unsigned char help1Data[253];
+	unsigned char help2Data[253] ={'\0'};
+	unsigned char decodedData[253] ={'\0'};
 	while(true){
 		memset(buffer, '\0', sizeof(buffer));
 		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
@@ -195,8 +201,10 @@ int main(int argc, char *argv[]){
 		}
 		
 		int iteration = 0;
-		unsigned char data[253];
 		memset(data, '\0', 253);
+		memset(help1Data, '\0', 253);
+		memset(help2Data, '\0', 253);
+		memset(decodedData, '\0', 253);
 		while(&(dns_query[iteration]) != index){
 			// printf("%c", dns_query[iteration]);
 			data[iteration] = dns_query[iteration];
@@ -204,11 +212,25 @@ int main(int argc, char *argv[]){
 			iteration++;
 
 		}
-		// printf("DATA: %s\n", data);
-		unsigned char decodedData[253] ={'\0'};
+
+
+		for(int i = 0; i < strlen(data); i++){
+			strncpy(help1Data, &(data[i+1]), (int)data[i]);
+			printf("help1data: %s\n", help1Data);
+			strcat(help2Data, help1Data);
+
+
+			memset(help1Data, '\0', 253);
+			i = (int)data[i];
+		}
+		memset(data, '\0', 253);
+		strcpy(data, help2Data);
+		printf("help2data: %s\n", help2Data);
+
+		printf("DATA: %s\n", data);
 		
 		base32_decode(data, decodedData, 253);
-		// printf("decodedData: %s\n", decodedData);
+		printf("decodedData: %s\n", decodedData);
 
 		
 	}
