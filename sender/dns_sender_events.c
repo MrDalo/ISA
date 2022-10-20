@@ -154,7 +154,7 @@ int main(int argc, char *argv[]){
 	strcpy(DST_FILEPATH, argv[paramerProccessed]);
 
 	paramerProccessed++;
-	printf("1BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
+
 	bool readFromFILE = false;
 	FILE* SRC_FILEPATH = NULL;
 
@@ -203,8 +203,6 @@ int main(int argc, char *argv[]){
 
 	
 	// printf("data: %s\n", data.inputData);
-	printf("2BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
-
 
 	/**
 	 * @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
@@ -251,9 +249,7 @@ int main(int argc, char *argv[]){
 	unsigned char baseHostForQname[253] ={'\0'};
 
 
-	printf("3BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
 	ChangetoDnsNameFormat(baseHostForQname , BASE_HOST);
-	printf("4BASE_HOST: %s, DST_FILEPATH: %s\n", BASE_HOST, DST_FILEPATH);
 	
 	// printf("arrayForQname: %s\n", baseHostForQname);
 
@@ -274,15 +270,12 @@ int main(int argc, char *argv[]){
 	qinfo->qtype = htons(1); 
 	qinfo->qclass = htons(1); 
 	
-	// strcat(buffer, data.inputData);
-	// printf("sizeof: %ld\n", sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION));
-	// printf("buffer3: %s\n", buffer);
 	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 
 		fprintf(stderr, "Error; SENDTO failed");
 		exit(1);
 	}
-	// printf("SENDTO succed\n");
+
 
 		//DATA PACKET
 	memset(buffer,'\0', 512);
@@ -290,14 +283,19 @@ int main(int argc, char *argv[]){
 
 	dnsHeader->id = (unsigned short) htons(getpid());
 
-	unsigned char base32_data_buf[253] = {'\0'};
-
-	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname));
+	unsigned char base32_data_buf[254] = {'\0'};
+		// - 4 because of 4x dot for hexa conversion
+	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
 	int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 253);
+		//v bsae32_data_buf su encodovane data
+		//TODO previest na DNS format
+
+	ChangetoDnsNameFormat(qname, base32_data_buf);
+
 	
-	dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, base32_data_buf);
+	dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
 	
-	strcat(qname, base32_data_buf);
+	// strcat(qname, base32_data_buf);
 	strcat(qname, baseHostForQname);
 
 	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
