@@ -295,6 +295,9 @@ int main(int argc, char *argv[]){
 	
 		dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
 		packetCounter++;
+		dnsHeader->rd = 1; 
+		dnsHeader->q_count = htons(1); 
+
 	
 		memset(base32_data_buf,'\0', 254);
 			// - 4 because of 4x dot for hexa conversion
@@ -333,6 +336,8 @@ int main(int argc, char *argv[]){
 	memset(buffer,'\0', 512);
 	dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
 	packetCounter++;
+	dnsHeader->rd = 1; 
+	dnsHeader->q_count = htons(1); 
 
 	memset(initData, '\0', 254);
 	memset(base32_data_buf,'\0', 254);
