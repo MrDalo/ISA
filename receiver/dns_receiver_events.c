@@ -40,15 +40,16 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 	int lock = 0 , i;
 	strcat((char*)host,".");
 	char help[5];
+	unsigned char *ptr = NULL;
 	
 	for(i = 0 ; i < strlen((char*)host) ; i++) 
 	{
 
 		if(host[i]=='.') 
 		{
-			sprintf(help, "%x", i-lock);
-			strcat((char*)dns, help);
-			*dns++;
+			// sprintf(help, "%x", i-lock);
+			// strcat((char*)dns, help);
+			*dns++=(unsigned char)(i-lock);
 			for(;lock<i;lock++) 
 			{
 				*dns++=host[lock];
@@ -56,8 +57,7 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 			lock++;
 		}
 	}
-	host[strlen((char *)host) - 1] = '\0';
-	*dns++='0';
+	*dns++=(unsigned char)(0);
 }
 
 struct dataStruct
@@ -160,6 +160,11 @@ int main(int argc, char *argv[]){
 
 	int lenght = sizeof(clientAddr);
 	int numOfBytesReceived = 0;
+	char qname [253];
+	memset(qname, '\0', 253);
+	ChangetoDnsNameFormat(qname, BASE_HOST);
+	printf("qname: %s\n", qname);
+	
 	while(true){
 		memset(buffer, '\0', sizeof(buffer));
 		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
@@ -177,14 +182,17 @@ int main(int argc, char *argv[]){
 		struct DNS_HEADER *header = (struct DNS_HEADER *)buffer;
 		// printf("header id: %d\n", header->id);
 
-		char qname [253];
-		memset(qname, '\0', 253);
+		
 		char *dns_query = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 		// printf("dns_quey: %s\n", dns_query);
-		ChangetoDnsNameFormat(qname, BASE_HOST);
-		// printf("BASE_HOST: %s\n", BASE_HOST);
+		
 		// printf("qname: %s\n", qname);
 		char *index = strstr(dns_query, qname);
+		
+		if(index == NULL){
+			// printf("BASE_HOST NIEJE ROVNAKY\n");
+			continue;
+		}
 		
 		int iteration = 0;
 		unsigned char data[253];
@@ -196,11 +204,11 @@ int main(int argc, char *argv[]){
 			iteration++;
 
 		}
-		printf("DATA: %s\n", data);
+		// printf("DATA: %s\n", data);
 		unsigned char decodedData[253] ={'\0'};
 		
 		base32_decode(data, decodedData, 253);
-		printf("decodedData: %s\n", decodedData);
+		// printf("decodedData: %s\n", decodedData);
 
 		
 	}
