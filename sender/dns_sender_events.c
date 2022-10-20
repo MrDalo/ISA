@@ -61,6 +61,42 @@ void dns_sender__on_transfer_completed( char *filePath, int fileSize)
 	fprintf(stderr, "[CMPL] %s of %dB\n", filePath, fileSize);
 }
 
+void ChangeBufferToDNSFormat(char *buffer){
+
+	int lock = 0 , i, j, numberOfMovedChars;
+	// strcat((char *)buffer, ".");
+	
+	for( i = 0; i < strlen((char *)buffer); i++){
+		
+		if( (i % 63) == 0){
+			numberOfMovedChars = 0;
+			printf("i: %i\n", i);
+			for(j = strlen((char *)buffer); j > i; j--){
+				buffer[j] = buffer[j-1];
+				numberOfMovedChars++;
+			}
+				
+			buffer[i] = (unsigned char)( (numberOfMovedChars)/63 != 0 ? 63 : numberOfMovedChars);
+			// printf("i: %i, buffer: %i, numberOfMovedChar: %i, '%c'\n",i, buffer[i], numberOfMovedChars, (unsigned char)(0));
+
+		}
+
+		// if(buffer[i]=='.') 
+		// {
+		// 	// sprintf(help, "%x", i-lock);
+		// 	// strcat((char*)dns, help);
+		// 	*dns++=(unsigned char)(i-lock);
+		// 	for(;lock<i;lock++) 
+		// 	{
+		// 		*dns++=buffer[lock];
+		// 	}
+		// 	lock++;
+		// }
+	}
+
+
+}
+
 
 void ChangetoDnsNameFormat(char* dns, char* host) 
 {
@@ -286,16 +322,24 @@ int main(int argc, char *argv[]){
 	unsigned char base32_data_buf[254] = {'\0'};
 		// - 4 because of 4x dot for hexa conversion
 	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
-	int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 253);
+	// printf("NEDED DATALENGTH: %i\n", neededDataLength);
+	int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
+	// int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 253);
 		//v bsae32_data_buf su encodovane data
 		//TODO previest na DNS format
 
-	ChangetoDnsNameFormat(qname, base32_data_buf);
+
+
+	// printf("BUFFER BEFORE DOTS: %s\n", base32_data_buf);
+	ChangeBufferToDNSFormat(base32_data_buf);
+	// printf("BUFFER AFTER DOTS: %s\n", base32_data_buf);
+
+	// ChangetoDnsNameFormat(qname, base32_data_buf);
 
 	
 	dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
 	
-	// strcat(qname, base32_data_buf);
+	strcat(qname, base32_data_buf);
 	strcat(qname, baseHostForQname);
 
 	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
