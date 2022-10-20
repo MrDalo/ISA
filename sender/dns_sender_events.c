@@ -70,7 +70,7 @@ void ChangeBufferToDNSFormat(char *buffer){
 		
 		if( (i % 63) == 0){
 			numberOfMovedChars = 0;
-			printf("i: %i\n", i);
+			// printf("i: %i\n", i);
 			for(j = strlen((char *)buffer); j > i; j--){
 				buffer[j] = buffer[j-1];
 				numberOfMovedChars++;
@@ -246,6 +246,7 @@ int main(int argc, char *argv[]){
 	
 	struct sockaddr_in destination;
 	int clientSocket;
+	int packetCounter = 0;
 
 	if((clientSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) <= 0)
 	{
@@ -265,7 +266,8 @@ int main(int argc, char *argv[]){
 	struct DNS_HEADER *dnsHeader = NULL;
 	dnsHeader = (struct DNS_HEADER *)&buffer;
 
-	dnsHeader->id = (unsigned short) htons(getpid());
+	dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+	packetCounter++;
 	dnsHeader->qr = 0; 
 	dnsHeader->opcode = 0; 
 	dnsHeader->aa = 0; 
@@ -284,20 +286,17 @@ int main(int argc, char *argv[]){
 	unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 	unsigned char baseHostForQname[253] ={'\0'};
 
-
 	ChangetoDnsNameFormat(baseHostForQname , BASE_HOST);
 	
-	// printf("arrayForQname: %s\n", baseHostForQname);
+	unsigned char base32_data_buf[254] = {'\0'};
+	unsigned char initData[254] = {'\0'};
+	
+	sprintf(initData, "INITPATH[%s]", DST_FILEPATH);
+	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
+	int numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, strlen(initData));
+	ChangeBufferToDNSFormat(base32_data_buf);
 
-	// int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname));
-	// printf("neededDataLenght: %d\n", neededDataLength);
-	// int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 256);
-
-	// strcat(qname, base32_data_buf);
-	// strcat(qname, baseHostForQname);	
-	// printf("QNAME: %s, numbeOfWritenChars: %d\n", qname, numberOfWritenChars);
-
-	// sprintf(qname, "INIT PACKET PATH[%s]", DST_FILEPATH);
+	strcat(qname, base32_data_buf);
 	strcat(qname, baseHostForQname);
 
 	struct QUESTION *qinfo = NULL;
@@ -305,6 +304,7 @@ int main(int argc, char *argv[]){
 
 	qinfo->qtype = htons(1); 
 	qinfo->qclass = htons(1); 
+	// printf("QNAME: %s\n", qname);
 	
 	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 
@@ -317,13 +317,15 @@ int main(int argc, char *argv[]){
 	memset(buffer,'\0', 512);
 	dnsHeader = (struct DNS_HEADER *)&buffer;
 
-	dnsHeader->id = (unsigned short) htons(getpid());
+	dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+	packetCounter++;
 
-	unsigned char base32_data_buf[254] = {'\0'};
+	memset(base32_data_buf,'\0', 254);
+	// printf("base43: %s\n",base32_data_buf);
 		// - 4 because of 4x dot for hexa conversion
-	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
+	neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
 	// printf("NEDED DATALENGTH: %i\n", neededDataLength);
-	int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
+	numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
 	// int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 253);
 		//v bsae32_data_buf su encodovane data
 		//TODO previest na DNS format
@@ -337,10 +339,10 @@ int main(int argc, char *argv[]){
 	// ChangetoDnsNameFormat(qname, base32_data_buf);
 
 	
-	dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
 	
 	strcat(qname, base32_data_buf);
 	strcat(qname, baseHostForQname);
+	dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
 
 	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 
@@ -352,8 +354,16 @@ int main(int argc, char *argv[]){
 
 		//FINAL PACKET
 	memset(buffer,'\0', 512);
-	dnsHeader->id = (unsigned short) htons(getpid());
-	strcat(qname, "[END PACKET]");
+	dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+	packetCounter++;
+
+	memset(initData, '\0', 254);
+	memset(base32_data_buf,'\0', 254);
+	sprintf(initData, "ENDPACKET");
+	numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, strlen(initData));
+	ChangeBufferToDNSFormat(base32_data_buf);
+
+	strcat(qname, base32_data_buf);
 	strcat(qname, baseHostForQname);
 
 	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
