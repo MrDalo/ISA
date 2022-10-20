@@ -269,7 +269,7 @@ int main(int argc, char *argv[]){
 	
 	sprintf(initData, "INITPATH[%s]", DST_FILEPATH);
 	int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
-	int numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, strlen(initData));
+	int numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
 	ChangeBufferToDNSFormat(base32_data_buf);
 
 	strcat(qname, base32_data_buf);
@@ -302,7 +302,7 @@ int main(int argc, char *argv[]){
 		memset(base32_data_buf,'\0', 254);
 			// - 4 because of 4x dot for hexa conversion
 		neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
-		numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
+		numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace));
 		
 		// printf("strlen before: %s\n", (data.inputData));
 		numberOfMovedChars = 0;
@@ -342,7 +342,8 @@ int main(int argc, char *argv[]){
 	memset(initData, '\0', 254);
 	memset(base32_data_buf,'\0', 254);
 	sprintf(initData, "ENDPACKET");
-	numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, strlen(initData));
+	// numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, strlen(initData));
+	numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
 	ChangeBufferToDNSFormat(base32_data_buf);
 
 	strcat(qname, base32_data_buf);
