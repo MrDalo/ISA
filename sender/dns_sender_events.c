@@ -81,17 +81,6 @@ void ChangeBufferToDNSFormat(char *buffer){
 
 		}
 
-		// if(buffer[i]=='.') 
-		// {
-		// 	// sprintf(help, "%x", i-lock);
-		// 	// strcat((char*)dns, help);
-		// 	*dns++=(unsigned char)(i-lock);
-		// 	for(;lock<i;lock++) 
-		// 	{
-		// 		*dns++=buffer[lock];
-		// 	}
-		// 	lock++;
-		// }
 	}
 
 
@@ -110,8 +99,6 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 
 		if(host[i]=='.') 
 		{
-			// sprintf(help, "%x", i-lock);
-			// strcat((char*)dns, help);
 			*dns++=(unsigned char)(i-lock);
 			for(;lock<i;lock++) 
 			{
@@ -150,14 +137,10 @@ int main(int argc, char *argv[]){
 		}
 		memset(dnsServer,'\0' ,strlen(argv[2]));
 		strcpy(dnsServer, argv[2]);
-		// printf("equal: %s\n", dnsServer);
-
 		paramerProccessed+=2;
 	}
 	else{
 		//DNS server from the resolv.conf
-		// printf("not-equal\n");
-
 		FILE *file;
 		char line[300];
 		if((file = fopen("/etc/resolv.conf", "r")) == NULL){
@@ -165,15 +148,12 @@ int main(int argc, char *argv[]){
 			exit(1);
 		}
 
-
-
 		do{
 			memset(line, '\0', 300);
 			fgets(line, 300, file);
 
 			nameServer = strtok(line, " ");
 			dnsServer = strtok(0, " ");
-			// printf("firstWrod: %s, IP: %s\n", nameServer, dnsServer);
 
 		}while(line[0] == '#' || line[0] == ';' || strcmp(nameServer, "nameserver"));
 
@@ -203,7 +183,6 @@ int main(int argc, char *argv[]){
 		paramerProccessed++;
 	}
 
-	
 
 	int character;
 	if(!readFromFILE){
@@ -214,7 +193,6 @@ int main(int argc, char *argv[]){
 					fprintf(stderr, "INTERNAL ERROR: Realloc error\n");
 				}
 				data.allocatedSpace*=2;
-				// printf("REALLOC\n");
 			}
 
 			data.inputData[data.currentSpace] = character;
@@ -238,8 +216,6 @@ int main(int argc, char *argv[]){
 	}
 
 	
-	// printf("data: %s\n", data.inputData);
-
 	/**
 	 * @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
 	*/
@@ -304,7 +280,6 @@ int main(int argc, char *argv[]){
 
 	qinfo->qtype = htons(1); 
 	qinfo->qclass = htons(1); 
-	// printf("QNAME: %s\n", qname);
 	
 	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 
@@ -312,45 +287,47 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
+	int numberOfMovedChars = 0;
+	while(strlen(data.inputData) != 0){
+			//DATA PACKET
+		memset(buffer,'\0', 512);
+		dnsHeader = (struct DNS_HEADER *)&buffer;
+	
+		dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+		packetCounter++;
+	
+		memset(base32_data_buf,'\0', 254);
+			// - 4 because of 4x dot for hexa conversion
+		neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
+		numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
+		
+		// printf("strlen before: %s\n", (data.inputData));
+		numberOfMovedChars = 0;
+		for(int i = numberOfWritenChars; i < strlen(data.inputData); i++){
+			data.inputData[i-numberOfWritenChars] = data.inputData[i];
+			numberOfMovedChars++;
+		}
+		for(int i = numberOfMovedChars; i < strlen(data.inputData); i++){
+			data.inputData[i] = '\0';
+		}
+		// printf("strlen after: %s\n", (data.inputData));
+		
+		ChangeBufferToDNSFormat(base32_data_buf);
+		
+		strcat(qname, base32_data_buf);
+		strcat(qname, baseHostForQname);
+		dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
+	
+		if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
+		
+			fprintf(stderr, "Error; SENDTO failed");
+			exit(1);
+		}
 
-		//DATA PACKET
-	memset(buffer,'\0', 512);
-	dnsHeader = (struct DNS_HEADER *)&buffer;
-
-	dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
-	packetCounter++;
-
-	memset(base32_data_buf,'\0', 254);
-	// printf("base43: %s\n",base32_data_buf);
-		// - 4 because of 4x dot for hexa conversion
-	neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
-	// printf("NEDED DATALENGTH: %i\n", neededDataLength);
-	numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
-	// int numberOfWritenChars = base32_encode((uint8_t *)data.inputData, neededDataLength, (uint8_t *)base32_data_buf, 253);
-		//v bsae32_data_buf su encodovane data
-		//TODO previest na DNS format
-
-
-
-	// printf("BUFFER BEFORE DOTS: %s\n", base32_data_buf);
-	ChangeBufferToDNSFormat(base32_data_buf);
-	// printf("BUFFER AFTER DOTS: %s\n", base32_data_buf);
-
-	// ChangetoDnsNameFormat(qname, base32_data_buf);
 
 	
-	
-	strcat(qname, base32_data_buf);
-	strcat(qname, baseHostForQname);
-	dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
-
-	if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
-
-		fprintf(stderr, "Error; SENDTO failed");
-		exit(1);
+		dns_sender__on_chunk_sent(&(destination.sin_addr) ,DST_FILEPATH, dnsHeader->id, strlen(buffer)*sizeof(char));
 	}
-
-	dns_sender__on_chunk_sent(&(destination.sin_addr) ,DST_FILEPATH, dnsHeader->id, strlen(buffer)*sizeof(char));
 
 		//FINAL PACKET
 	memset(buffer,'\0', 512);
@@ -373,7 +350,6 @@ int main(int argc, char *argv[]){
 	}
 
 	dns_sender__on_transfer_completed(DST_FILEPATH, strlen(data.inputData) * sizeof(char));
-
 	
 	return 0;
 }
