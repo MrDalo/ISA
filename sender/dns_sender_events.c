@@ -156,6 +156,7 @@ int main(int argc, char *argv[]){
 			dnsServer = strtok(0, " ");
 
 		}while(line[0] == '#' || line[0] == ';' || strcmp(nameServer, "nameserver"));
+		fclose(file);
 
 	}
 	
@@ -368,7 +369,7 @@ int main(int argc, char *argv[]){
 
 	memset(initData, '\0', 254);
 	memset(base32_data_buf,'\0', 254);
-	sprintf(initData, "ENDPACKET");
+	sprintf(initData, "[ENDPACKET]");
 	// numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, strlen(initData));
 	numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
 	

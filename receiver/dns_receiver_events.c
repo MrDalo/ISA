@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
 	}
 
 	char* BASE_HOST = argv[1];
-	char* DST_FILEPATH = argv[2];
+	char* DST_DIRPATH = argv[2];
 
 	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH); 
 
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]){
 	printf("qname: %s\n", qname);
 
 
-	
+	FILE *outputFile;
 	unsigned char data[253];
 	unsigned char help1Data[253];
 	unsigned char help2Data[253] ={'\0'};
@@ -174,8 +174,8 @@ int main(int argc, char *argv[]){
 	while(true){
 		memset(buffer, '\0', sizeof(buffer));
 		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
-		printf("Client: %s\n", buffer);
-		printf("Bytes: %i\n", numOfBytesReceived);
+		// printf("Client: %s\n", buffer);
+		// printf("Bytes: %i\n", numOfBytesReceived);
 
 		unsigned char client_addr_str[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientAddr.sin_addr), client_addr_str, INET_ADDRSTRLEN);
@@ -183,18 +183,17 @@ int main(int argc, char *argv[]){
            numOfBytesReceived, client_addr_str);
 
 
-		print_buffer(buffer, numOfBytesReceived);
+		// print_buffer(buffer, numOfBytesReceived);
 
 		struct DNS_HEADER *header = (struct DNS_HEADER *)buffer;
 		// printf("header id: %d\n", header->id);
 
 		
 		char *dns_query = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
-		// printf("dns_quey: %s\n", dns_query);
 		
-		// printf("qname: %s\n", qname);
+			
+			//Check if dns_query coontains BASE_HOST
 		char *index = strstr(dns_query, qname);
-		
 		if(index == NULL){
 			// printf("BASE_HOST NIEJE ROVNAKY\n");
 			continue;
@@ -227,10 +226,43 @@ int main(int argc, char *argv[]){
 		strcpy(data, help2Data);
 		// printf("help2data: %s\n", help2Data);
 
-		printf("DATA: %s\n", data);
+		// printf("DATA: %s\n", data);
 		
 		base32_decode(data, decodedData, 253);
 		printf("decodedData: %s\n", decodedData);
+
+		unsigned char DST_FILEPATH[255]={'\0'};
+		index = strstr(decodedData,"INITPATH[");
+		if(index != NULL){
+			printf("TOTO JE INIT PACKET\n");
+
+			int j = 0;
+
+			for(int i = 9; i < (strlen(decodedData)-1); i++){
+
+				DST_FILEPATH[j] = decodedData[i];
+				j++;
+			}
+
+			printf("DST_FILEPATH: %s\n", DST_FILEPATH);
+			
+			if((outputFile = fopen("./output.txt", "w")) == NULL){
+				fprintf(stderr, "Error: Can't open /etc/resolv.conf file for DNS server \n");
+				exit(1);
+			}
+			continue;
+		}
+
+		index = strstr(decodedData,"[ENDPACKET]");
+		if(index != NULL){
+			printf("TOTO JE END PACKET\n");
+			fclose(outputFile);
+			continue;
+		}
+		char text[] = "sasdfasdf";
+		fprintf(outputFile,"%s", decodedData);
+		// fprintf(outputFile, text);
+
 
 		
 	}
