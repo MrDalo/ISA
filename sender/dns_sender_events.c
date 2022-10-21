@@ -310,14 +310,14 @@ int main(int argc, char *argv[]){
 			// - 4 because of 4x dot for hexa conversion
 		neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
 		// printf("base32 before: %s\n", base32_data_buf);
-		numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace));
+		numberOfWritenChars = base32_encode((uint8_t *)data.inputData, strlen(data.inputData) >= neededDataLength ? neededDataLength : strlen(data.inputData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(data.inputData) >= neededDataLength ? neededDataLength : strlen(data.inputData)));
 		// printf("base32 after: %s\n",base32_data_buf);
 		// numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
 		
 		numberOfMovedChars = 0;
 		
 			//Posunutie INPUTDAT o zakodovany pocet znakov
-		int numberOfNonCodedData = data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace;
+		int numberOfNonCodedData = strlen(data.inputData) >= neededDataLength ? neededDataLength : strlen(data.inputData);
 		// printf("\nnumberofwrittedchars: %i\n", numberOfNonCodedData);
 		for(int i = numberOfNonCodedData; i < strlen(data.inputData); i++){
 			data.inputData[i-numberOfNonCodedData] = data.inputData[i];
