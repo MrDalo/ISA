@@ -120,7 +120,9 @@ int main(int argc, char *argv[]){
 	}
 
 	char* BASE_HOST = argv[1];
-	char* DST_DIRPATH = argv[2];
+	// char* DST_DIRPATH = argv[2];
+	unsigned char DST_DIRPATH[255]={'\0'};
+	strcpy(DST_DIRPATH, argv[2]);
 
 	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH); 
 
@@ -232,9 +234,12 @@ int main(int argc, char *argv[]){
 		printf("decodedData: %s\n", decodedData);
 
 		unsigned char DST_FILEPATH[255]={'\0'};
+		unsigned char DST_DIRPATH_HELP[255]={'\0'};
+		strcpy(DST_DIRPATH_HELP, DST_DIRPATH);
+
 		index = strstr(decodedData,"INITPATH[");
 		if(index != NULL){
-			printf("TOTO JE INIT PACKET\n");
+			// printf("TOTO JE INIT PACKET\n");
 
 			int j = 0;
 
@@ -245,9 +250,44 @@ int main(int argc, char *argv[]){
 			}
 
 			printf("DST_FILEPATH: %s\n", DST_FILEPATH);
+
+			if(DST_DIRPATH_HELP[strlen(DST_DIRPATH_HELP)-1] != '/'){
+				DST_DIRPATH_HELP[strlen(DST_DIRPATH_HELP)] = '/';
+			}
+			strcat(DST_DIRPATH_HELP, DST_FILEPATH);
+
+
+			// if(DST_DIRPATH_COMMAND[strlen(DST_DIRPATH_COMMAND)-1] != '/'){
+			// 	DST_DIRPATH_COMMAND[strlen(DST_DIRPATH_COMMAND)] = '/';
+			// }
+
+
+			// strcat(DST_DIRPATH_COMMAND, DST_FILEPATH);
+			printf("TOTO JE DIRPATH_HELP: %s\n", DST_DIRPATH_HELP);
+			// memset(DST_DIRPATH, '\0', 255);
+			// strcpy(DST_DIRPATH, DST_DIRPATH_COMMAND);
+
+			unsigned char DST_DIRPATH_COMMAND[265];
+			sprintf(DST_DIRPATH_COMMAND, "mkdir -p %s", DST_DIRPATH_HELP); 
+
+
+			int i = strlen(DST_DIRPATH_COMMAND)-1;
+			for(i; i >= 0; i--){
+				if(DST_DIRPATH_COMMAND[i] == '/'){
+					break;
+				}
+			}
+
+			for(i; i< strlen(DST_DIRPATH_COMMAND); i++){
+				DST_DIRPATH_COMMAND[i] = '\0';
+			}
+
+
+			printf("DIRPATH: %s\nFILEPATH: %s\n", DST_DIRPATH_COMMAND, DST_DIRPATH_HELP);
+			system(DST_DIRPATH_COMMAND);
 			
-			if((outputFile = fopen("./output.txt", "w")) == NULL){
-				fprintf(stderr, "Error: Can't open /etc/resolv.conf file for DNS server \n");
+			if((outputFile = fopen(DST_DIRPATH_HELP, "w")) == NULL){
+				fprintf(stderr, "Error: Can't open output file \n");
 				exit(1);
 			}
 			continue;
