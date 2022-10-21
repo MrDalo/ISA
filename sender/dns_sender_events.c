@@ -68,7 +68,7 @@ void ChangeBufferToDNSFormat(char *buffer){
 	
 	for( i = 0; i < strlen((char *)buffer); i++){
 		
-		if( (i % 63) == 0){
+		if( (i % 64) == 0){
 			numberOfMovedChars = 0;
 			// printf("i: %i\n", i);
 			for(j = strlen((char *)buffer); j > i; j--){
@@ -287,6 +287,7 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
+	printf("%s\n", data.inputData);
 	int numberOfMovedChars = 0;
 	while(strlen(data.inputData) != 0){
 			//DATA PACKET
@@ -298,28 +299,54 @@ int main(int argc, char *argv[]){
 		dnsHeader->rd = 1; 
 		dnsHeader->q_count = htons(1); 
 
+
+
+
+
+
 	
 		memset(base32_data_buf,'\0', 254);
 			// - 4 because of 4x dot for hexa conversion
 		neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
+		// printf("base32 before: %s\n", base32_data_buf);
 		numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace));
+		// printf("base32 after: %s\n",base32_data_buf);
+		// numberOfWritenChars = base32_encode((uint8_t *)data.inputData, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace, (uint8_t *)base32_data_buf, data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace);
 		
-		// printf("strlen before: %s\n", (data.inputData));
 		numberOfMovedChars = 0;
-		for(int i = numberOfWritenChars; i < strlen(data.inputData); i++){
-			data.inputData[i-numberOfWritenChars] = data.inputData[i];
+		
+			//Posunutie INPUTDAT o zakodovany pocet znakov
+		int numberOfNonCodedData = data.currentSpace >= neededDataLength ? neededDataLength : data.currentSpace;
+		// printf("\nnumberofwrittedchars: %i\n", numberOfNonCodedData);
+		for(int i = numberOfNonCodedData; i < strlen(data.inputData); i++){
+			data.inputData[i-numberOfNonCodedData] = data.inputData[i];
 			numberOfMovedChars++;
 		}
 		for(int i = numberOfMovedChars; i < strlen(data.inputData); i++){
 			data.inputData[i] = '\0';
 		}
-		// printf("strlen after: %s\n", (data.inputData));
+			// printf("\nstrlen after: %i\n", strlen(data.inputData));
+		// IFUG62RAMFVW6IDTMFWWC4Z7EBVGCIDTMEQG2YLNEBTGC23UEBSG6YTSMUQGCIDUPE7SA3LOMUQGUZJAORUWK6RAMRXWE4TFFYQECIDDN4QG2YLTEBXG65TFEB3G6IDTOZXWU33NEBUW4ZTPOJWWC5DJMNVW63JAPJUXM33UMU7SATLOMUQHGYJANZSWUYLLN4QG4ZLEMFZGSLBANZUWKIDTN5WSA5TPEBZXM33KMVVCA
 		
+		unsigned char decodedData[254]={'\0'};
+		// // strcpy(base32_data_buf, "IFUG62RAMFVW6IDTMFWWC4Z7EBVGCIDTMEQG2YLNEBTGC23UEBSG6YTSMUQGCIDUPE7SA3LOMUQGUZJAORUWK6RAMRXWE4TFFYQECIDDN4QG2YLTEBXG65TFEB3G6IDTOZXWU33NEBUW4ZTPOJWWC5DJMNVW63JAPJUXM33UMU7SATLOMUQHGYJANZSWUYLLN4QG4ZLEMFZGSLBANZUWKIDTN5WSA5TPEBZXM33KMVVCA");
+		// strcpy(base32_data_buf, "IVHEIUCBINFUKV");
+		base32_decode(base32_data_buf, decodedData, 253);
+		// printf("decoded: %s\n", decodedData);
+
+
+		
+		// printf("nonCODED: %s\n", base32_data_buf);
 		ChangeBufferToDNSFormat(base32_data_buf);
-		printf("prvy znak %i\n", (int)base32_data_buf[0]);
+		printf("ENCODED: %s\n", base32_data_buf);
 		strcat(qname, base32_data_buf);
 		strcat(qname, baseHostForQname);
 		dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
+
+
+
+
+
 	
 		if(sendto(clientSocket, (unsigned char*)buffer, sizeof(struct DNS_HEADER) + (strlen((const char*)qname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&destination, sizeof(destination)) < 0){
 		
@@ -344,6 +371,15 @@ int main(int argc, char *argv[]){
 	sprintf(initData, "ENDPACKET");
 	// numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, strlen(initData));
 	numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
+	
+	unsigned char decodedData[254]={'\0'};
+		// strcpy(base32_data_buf, "IFUG62RAMFVW6IDTMFWWC4Z7EBVGCIDTMEQG2YLNEBTGC23UEBSG6YTSMUQGCIDUPE7SA3LOMUQGUZJAORUWK6RAMRXWE4TFFYQECIDDN4QG2YLTEBXG65TFEB3G6IDTOZXWU33NEBUW4ZTPOJWWC5DJMNVW63JAPJUXM33UMU7SATLOMUQHGYJANZSWUYLLN4QG4ZLEMFZGSLBANZUWKIDTN5WSA5TPEBZXM33KMVVCA");
+		// strcpy(base32_data_buf, "IVHEIUCBINFUKV");
+
+		// printf("encoded: %s\n", base32_data_buf);
+		// base32_decode(base32_data_buf, decodedData, 253);
+		// printf("decoded: %s\n", decodedData);
+	
 	ChangeBufferToDNSFormat(base32_data_buf);
 
 	strcat(qname, base32_data_buf);
@@ -356,6 +392,8 @@ int main(int argc, char *argv[]){
 	}
 
 	dns_sender__on_transfer_completed(DST_FILEPATH, strlen(data.inputData) * sizeof(char));
+
+	// printf("strlen: %i\n", strlen("UPE7SA3LOMUQGUZJAORUWK6RAMRXWE4TFFYQECIDDN4QG2YLTEBXG65TFEB3G6I"));
 	
 	return 0;
 }

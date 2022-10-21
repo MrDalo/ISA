@@ -216,16 +216,16 @@ int main(int argc, char *argv[]){
 
 		for(int i = 0; i < strlen(data); i++){
 			strncpy(help1Data, &(data[i+1]), (int)data[i]);
-			printf("help1data: %s\n", help1Data);
+			// printf("help1data: %s\n", help1Data);
 			strcat(help2Data, help1Data);
 
 
 			memset(help1Data, '\0', 253);
-			i = (int)data[i];
+			i += (int)data[i];
 		}
 		memset(data, '\0', 253);
 		strcpy(data, help2Data);
-		printf("help2data: %s\n", help2Data);
+		// printf("help2data: %s\n", help2Data);
 
 		printf("DATA: %s\n", data);
 		
