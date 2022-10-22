@@ -16,56 +16,6 @@
 #define BASE32_LENGTH_DECODE(src_size) (ceil((src_size)) / 1.6)
 
 
-void print_buffer(unsigned char *buffer, size_t len) {
-  unsigned char preview[17];
-  preview[16] = '\0';
-  memset(preview, ' ', 16);
-  for (int i = 0; i < len; ++i) {
-    if (i && i % 16 == 0) {
-      printf(" %s\n", preview);
-      memset(preview, ' ', 16);
-    }
-    unsigned char c = buffer[i];
-    printf("%02x ", c);
-    preview[i % 16] = (c == ' ' || (c >= '!' && c < '~')) ? c : '.';
-  }
-  for (int i = 0; i < 16 - len % 16; ++i) {
-    printf("   ");
-  }
-  printf(" %s\n", preview);
-}
-
-void ChangetoDnsNameFormat(char* dns, char* host) 
-{
-	int lock = 0 , i;
-	strcat((char*)host,".");
-	char help[5];
-	unsigned char *ptr = NULL;
-	
-	for(i = 0 ; i < strlen((char*)host) ; i++) 
-	{
-
-		if(host[i]=='.') 
-		{
-			// sprintf(help, "%x", i-lock);
-			// strcat((char*)dns, help);
-			*dns++=(unsigned char)(i-lock);
-			for(;lock<i;lock++) 
-			{
-				*dns++=host[lock];
-			}
-			lock++;
-		}
-	}
-	*dns++=(unsigned char)(0);
-}
-
-struct dataStruct
-{
-	char* inputData;
-	int allocatedSpace;
-};
-
 void dns_receiver__on_query_parsed(char *filePath, char *encodedData)
 {
 	fprintf(stderr, "[PARS] %s '%s'\n", filePath, encodedData);
@@ -108,6 +58,30 @@ void dns_receiver__on_transfer_init6(struct in6_addr *source)
 void dns_receiver__on_transfer_completed(char *filePath, int fileSize)
 {
 	fprintf(stderr, "[CMPL] %s of %dB\n", filePath, fileSize);
+}
+
+
+void ChangetoDnsNameFormat(char* dns, char* host) 
+{
+	int lock = 0 , i;
+	strcat((char*)host,".");
+	char help[5];
+	unsigned char *ptr = NULL;
+	
+	for(i = 0 ; i < strlen((char*)host) ; i++) 
+	{
+
+		if(host[i]=='.') 
+		{
+			*dns++=(unsigned char)(i-lock);
+			for(;lock<i;lock++) 
+			{
+				*dns++=host[lock];
+			}
+			lock++;
+		}
+	}
+	*dns++=(unsigned char)(0);
 }
 
 
