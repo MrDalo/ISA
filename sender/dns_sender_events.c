@@ -357,6 +357,7 @@ int main(int argc, char *argv[]){
 		ChangeBufferToDNSFormat(base32_data_buf);
 		strcat(qname, base32_data_buf);
 		strcat(qname, baseHostForQname);
+		printf("buffer WITH ALL: %s\n", buffer);
 		dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
 		
 		qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
@@ -382,7 +383,7 @@ int main(int argc, char *argv[]){
 
 		dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
 
-		printf("Response Header ID: %ld\n", dnsResponseHeader->id);
+		printf("Response Header ID: %d\n", dnsResponseHeader->id);
 
 
 	
