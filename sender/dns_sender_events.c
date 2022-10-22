@@ -341,7 +341,7 @@ int main(int argc, char *argv[]){
 		
 		// printf("nonCODED: %s\n", base32_data_buf);
 		ChangeBufferToDNSFormat(base32_data_buf);
-		printf("ENCODED: %s\n", base32_data_buf);
+		// printf("ENCODED: %s\n", base32_data_buf);
 		strcat(qname, base32_data_buf);
 		strcat(qname, baseHostForQname);
 		dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);

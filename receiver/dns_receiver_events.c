@@ -118,14 +118,10 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "Error: Wrong number of program arguments\n");
 		exit(1);
 	}
-
+		//Process arguments of the program
 	char* BASE_HOST = argv[1];
-	// char* DST_DIRPATH = argv[2];
 	unsigned char DST_DIRPATH[255]={'\0'};
 	strcpy(DST_DIRPATH, argv[2]);
-
-	// printf("%s, %s\n", BASE_HOST, DST_FILEPATH); 
-
 
 
 	int serverSocket;
@@ -142,9 +138,10 @@ int main(int argc, char *argv[]){
 
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(53);
-	// serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAddr.sin_addr.s_addr = INADDR_ANY;
 
+
+		//Set options to socket
 	int optval = 1;	
 	if(setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&optval, sizeof(int)))
 	{
@@ -158,17 +155,17 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "ERROR: Failed to bind, %s\n", strerror(errno));
 		exit(1);
 	}
-	printf("Binding succesfull\n");
+	// printf("Binding succesfull\n");
 
 	int lenght = sizeof(clientAddr);
 	int numOfBytesReceived = 0;
 	char qname [253];
 	memset(qname, '\0', 253);
 	ChangetoDnsNameFormat(qname, BASE_HOST);
-	printf("qname: %s\n", qname);
 
-
+		//Process receiving data packets
 	FILE *outputFile;
+	int fileSize = 0;
 	unsigned char data[253];
 	unsigned char help1Data[253];
 	unsigned char help2Data[253] ={'\0'};
@@ -176,28 +173,21 @@ int main(int argc, char *argv[]){
 	while(true){
 		memset(buffer, '\0', sizeof(buffer));
 		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
-		// printf("Client: %s\n", buffer);
-		// printf("Bytes: %i\n", numOfBytesReceived);
 
+			//Extract client IP address
 		unsigned char client_addr_str[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientAddr.sin_addr), client_addr_str, INET_ADDRSTRLEN);
-		printf("---------------------------\nReceived %d bytes from %s\n",
-           numOfBytesReceived, client_addr_str);
+		printf("---------------------------\nReceived %d bytes from %s\n",  numOfBytesReceived, client_addr_str);
 
 
-		// print_buffer(buffer, numOfBytesReceived);
 
 		struct DNS_HEADER *header = (struct DNS_HEADER *)buffer;
-		// printf("header id: %d\n", header->id);
-
-		
 		char *dns_query = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 		
 			
 			//Check if dns_query coontains BASE_HOST
 		char *index = strstr(dns_query, qname);
 		if(index == NULL){
-			// printf("BASE_HOST NIEJE ROVNAKY\n");
 			continue;
 		}
 		
@@ -206,71 +196,61 @@ int main(int argc, char *argv[]){
 		memset(help1Data, '\0', 253);
 		memset(help2Data, '\0', 253);
 		memset(decodedData, '\0', 253);
-		while(&(dns_query[iteration]) != index){
-			// printf("%c", dns_query[iteration]);
-			data[iteration] = dns_query[iteration];
-			
-			iteration++;
 
+			//Extract data from DNS_QUERY wtihout BASE_HOST
+		while(&(dns_query[iteration]) != index){
+			data[iteration] = dns_query[iteration];
+			iteration++;
 		}
 
-
+			//Extract data from DNS format to normal normal string without hexa numbers before subdomain
 		for(int i = 0; i < strlen(data); i++){
 			strncpy(help1Data, &(data[i+1]), (int)data[i]);
-			// printf("help1data: %s\n", help1Data);
 			strcat(help2Data, help1Data);
-
 
 			memset(help1Data, '\0', 253);
 			i += (int)data[i];
 		}
+
 		memset(data, '\0', 253);
 		strcpy(data, help2Data);
-		// printf("help2data: %s\n", help2Data);
 
-		// printf("DATA: %s\n", data);
-		
+			//Decoding data from received packet		
 		base32_decode(data, decodedData, 253);
-		printf("decodedData: %s\n", decodedData);
+
 
 		unsigned char DST_FILEPATH[255]={'\0'};
 		unsigned char DST_DIRPATH_HELP[255]={'\0'};
 		strcpy(DST_DIRPATH_HELP, DST_DIRPATH);
 
+
+			//INIT PACKET receiver
 		index = strstr(decodedData,"INITPATH[");
 		if(index != NULL){
-			// printf("TOTO JE INIT PACKET\n");
+
 
 			int j = 0;
-
+				//Extract file PATH from decodedData
 			for(int i = 9; i < (strlen(decodedData)-1); i++){
 
 				DST_FILEPATH[j] = decodedData[i];
 				j++;
 			}
 
-			printf("DST_FILEPATH: %s\n", DST_FILEPATH);
 
+				//Add '/' to the end of the PATH received as parameter of the receiver program
 			if(DST_DIRPATH_HELP[strlen(DST_DIRPATH_HELP)-1] != '/'){
 				DST_DIRPATH_HELP[strlen(DST_DIRPATH_HELP)] = '/';
 			}
 			strcat(DST_DIRPATH_HELP, DST_FILEPATH);
 
 
-			// if(DST_DIRPATH_COMMAND[strlen(DST_DIRPATH_COMMAND)-1] != '/'){
-			// 	DST_DIRPATH_COMMAND[strlen(DST_DIRPATH_COMMAND)] = '/';
-			// }
-
-
-			// strcat(DST_DIRPATH_COMMAND, DST_FILEPATH);
-			printf("TOTO JE DIRPATH_HELP: %s\n", DST_DIRPATH_HELP);
-			// memset(DST_DIRPATH, '\0', 255);
-			// strcpy(DST_DIRPATH, DST_DIRPATH_COMMAND);
-
+				//Create STRING which represent command for creating FOLDER PATH
 			unsigned char DST_DIRPATH_COMMAND[265];
 			sprintf(DST_DIRPATH_COMMAND, "mkdir -p %s", DST_DIRPATH_HELP); 
 
 
+				//Removing file nam from the PATH
 			int i = strlen(DST_DIRPATH_COMMAND)-1;
 			for(i; i >= 0; i--){
 				if(DST_DIRPATH_COMMAND[i] == '/'){
@@ -283,36 +263,36 @@ int main(int argc, char *argv[]){
 			}
 
 
-			printf("DIRPATH: %s\nFILEPATH: %s\n", DST_DIRPATH_COMMAND, DST_DIRPATH_HELP);
+				//Creating FOLDER PATH(contains only folders)
 			system(DST_DIRPATH_COMMAND);
-			
+
+
+				//Open file for writing, if not created then create
 			if((outputFile = fopen(DST_DIRPATH_HELP, "w")) == NULL){
 				fprintf(stderr, "Error: Can't open output file \n");
 				exit(1);
 			}
+
+			dns_receiver__on_query_parsed(DST_DIRPATH_HELP, data);
 			continue;
 		}
 
+		dns_receiver__on_query_parsed(DST_DIRPATH_HELP, data);
+
+			//END PACKET received
 		index = strstr(decodedData,"[ENDPACKET]");
 		if(index != NULL){
-			printf("TOTO JE END PACKET\n");
 			fclose(outputFile);
+			dns_receiver__on_transfer_completed(DST_DIRPATH_HELP, fileSize);
 			continue;
 		}
-		char text[] = "sasdfasdf";
+
+			//DATA PACKET received
+		fileSize += strlen(decodedData);
 		fprintf(outputFile,"%s", decodedData);
-		// fprintf(outputFile, text);
-
-
+		dns_receiver__on_chunk_received( &(clientAddr.sin_addr),DST_DIRPATH_HELP, header->id, numOfBytesReceived);
 		
 	}
-
-
-	
-
-
-
-
 
 	return 0;
 }
