@@ -100,7 +100,10 @@ int main(int argc, char *argv[]){
 
 	int serverSocket;
 	unsigned char buffer[512];
+	unsigned char responseBuffer[512] ={'\0'};
+	struct DNS_HEADER *dnsResponseHeader = NULL;
 	struct sockaddr_in serverAddr, clientAddr;
+
 
 	if((serverSocket = socket(AF_INET, SOCK_DGRAM, 0)) < 0){
 		fprintf(stderr, "ERROR: Failed to create socket\n");
@@ -144,9 +147,19 @@ int main(int argc, char *argv[]){
 	unsigned char help1Data[253];
 	unsigned char help2Data[253] ={'\0'};
 	unsigned char decodedData[253] ={'\0'};
+	unsigned char *responseQname = (unsigned char*)&responseBuffer[sizeof(struct DNS_HEADER)];
+	struct QUESTION *responseQinfo = (struct QUESTION*)&responseBuffer[sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname) + 1)];
+
 	while(true){
-		memset(buffer, '\0', sizeof(buffer));
+		memset(buffer, '\0', strlen(buffer));
+		memset(responseBuffer, '\0', strlen(responseBuffer));
+		dnsResponseHeader = (struct DNS_HEADER *)&buffer;
+
 		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
+		if(numOfBytesReceived < 0){
+			fprintf(stderr, "Error in recvfrom function. Didn.t receive data packet\n");
+			exit(1);
+		}
 
 			//Extract client IP address
 		unsigned char client_addr_str[INET_ADDRSTRLEN];
@@ -265,7 +278,36 @@ int main(int argc, char *argv[]){
 		fileSize += strlen(decodedData);
 		fprintf(outputFile,"%s", decodedData);
 		dns_receiver__on_chunk_received( &(clientAddr.sin_addr),DST_DIRPATH_HELP, header->id, numOfBytesReceived);
+
+			//Prepare and send repsonse
 		
+		dnsResponseHeader->id = header->id;
+		dnsResponseHeader->qr = htons(1); 
+		dnsResponseHeader->opcode = 0; 
+		dnsResponseHeader->aa = 0; 
+		dnsResponseHeader->tc = 0; 
+		dnsResponseHeader->rd = 1; 
+		dnsResponseHeader->ra = 0; 
+		dnsResponseHeader->z = 0;
+		dnsResponseHeader->ad = 0;
+		dnsResponseHeader->cd = 0;
+		dnsResponseHeader->rcode = 0;
+		dnsResponseHeader->q_count = htons(1); 
+		dnsResponseHeader->ans_count = htons(1);
+		dnsResponseHeader->auth_count = 0;
+		dnsResponseHeader->add_count = 0;
+
+		strcpy(responseQname, dns_query); 
+		responseQinfo->qtype = htons(1); 
+		responseQinfo->qclass = htons(1); 
+
+		if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0){
+
+			fprintf(stderr, "Error; SENDTO failed");
+			exit(1);
+		}
+
+
 	}
 
 	return 0;

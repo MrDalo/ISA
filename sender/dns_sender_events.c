@@ -218,6 +218,7 @@ int main(int argc, char *argv[]){
 	*/
 	
 	struct sockaddr_in destination;
+	struct sockaddr_in serverAddr;
 	int clientSocket;
 	int packetCounter = 0;
 
@@ -234,10 +235,12 @@ int main(int argc, char *argv[]){
 	dns_sender__on_transfer_init(&(destination.sin_addr));
 	
 		//INIT PACKET
-	unsigned char buffer[512];
-	memset(buffer,'\0', 512);
+	unsigned char buffer[512] = {'\0'};
+	unsigned char receivedBuffer[512] ={'\0'};
 	struct DNS_HEADER *dnsHeader = NULL;
+	struct DNS_HEADER *dnsResponseHeader = NULL;
 	dnsHeader = (struct DNS_HEADER *)&buffer;
+	int numberOfReceivedBytes = 0;
 
 
 		//Prepare header
@@ -293,10 +296,18 @@ int main(int argc, char *argv[]){
 	}
 
 	// printf("%s\n", data.inputData);
+
+
+		//DATA PACKET
 	int numberOfMovedChars = 0;
 	while(strlen(data.inputData) != 0){
 			//DATA PACKET
 		memset(buffer,'\0', 512);
+		memset(&serverAddr, 0, sizeof(serverAddr)); 
+		memset(receivedBuffer,'\0', 512);
+		int serverAddrLength = sizeof(serverAddr);
+		
+
 		dnsHeader = (struct DNS_HEADER *)&buffer;
 
 			//Prepare DNS header	
@@ -359,10 +370,22 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Error; SENDTO failed");
 			exit(1);
 		}
+		dns_sender__on_chunk_sent(&(destination.sin_addr) ,DST_FILEPATH, dnsHeader->id, strlen(buffer)*sizeof(char));
+
+
+
+		numberOfReceivedBytes = recvfrom(clientSocket, (unsigned char *)receivedBuffer, 512, MSG_WAITALL, (struct sockaddr *)&serverAddr, &serverAddrLength);
+		if(numberOfReceivedBytes < 0){
+			fprintf(stderr, "Error in recvfrom function. Didn.t receive data packet\n");
+			exit(1);
+		}
+
+		dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
+
+		printf("Response Header ID: %ld\n", dnsResponseHeader->id);
 
 
 	
-		dns_sender__on_chunk_sent(&(destination.sin_addr) ,DST_FILEPATH, dnsHeader->id, strlen(buffer)*sizeof(char));
 	}
 
 		//FINAL PACKET

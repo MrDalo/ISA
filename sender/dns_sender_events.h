@@ -29,6 +29,20 @@ struct DNS_HEADER
 	unsigned short add_count; // number of resource entries
 };
 
+/**
+ *   @brief DNS header structure
+ *   @link https://github.com/tbenbrahim/dns-tunneling-poc/blob/main/src/dns.h
+*/
+struct DNS_ANSWER {
+  uint8_t ans_type;
+  uint8_t name_offset;
+  uint16_t type;
+  uint16_t qclass;
+  uint32_t ttl;
+  uint16_t rdlength;
+  uint32_t rdata;
+};
+
 
 /**
  *   @brief Question structure

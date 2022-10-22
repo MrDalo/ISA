@@ -3,6 +3,10 @@
 
 #include <netinet/in.h>
 
+/**
+ *   @brief DNS header structure
+ *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+*/
 struct DNS_HEADER
 {
 	unsigned short id; // identification number
@@ -23,6 +27,31 @@ struct DNS_HEADER
 	unsigned short ans_count; // number of answer entries
 	unsigned short auth_count; // number of authority entries
 	unsigned short add_count; // number of resource entries
+};
+
+
+/**
+ *   @brief DNS header structure
+ *   @link https://github.com/tbenbrahim/dns-tunneling-poc/blob/main/src/dns.h
+*/
+struct DNS_ANSWER {
+  uint8_t ans_type;
+  uint8_t name_offset;
+  uint16_t type;
+  uint16_t qclass;
+  uint32_t ttl;
+  uint16_t rdlength;
+  uint32_t rdata;
+};
+
+/**
+ *   @brief Question structure
+ *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+*/
+struct QUESTION
+{
+	unsigned short qtype;
+	unsigned short qclass;
 };
 
 /**
