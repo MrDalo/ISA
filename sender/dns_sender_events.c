@@ -327,6 +327,11 @@ int main(int argc, char *argv[]){
 			printf("Have to send packet one more time\n");
 
 		}
+	
+		dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
+		if(dnsResponseHeader->id != dnsHeader->id){
+			numberOfReceivedBytes = 0;
+		}
 
 	}
 	
@@ -399,6 +404,12 @@ int main(int argc, char *argv[]){
 
 		}
 		else{
+			dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
+
+			// printf("Response Header ID: %d\n", dnsResponseHeader->id);
+			if(dnsResponseHeader->id != dnsHeader->id){
+				continue;
+			}
 			numberOfMovedChars = 0;
 			
 				//Posunutie INPUTDAT o zakodovany pocet znakov
@@ -413,9 +424,6 @@ int main(int argc, char *argv[]){
 				data.inputData[i] = '\0';
 			}
 
-			dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
-
-			// printf("Response Header ID: %d\n", dnsResponseHeader->id);
 		
 		}
 	
@@ -480,6 +488,11 @@ int main(int argc, char *argv[]){
 		if(numberOfReceivedBytes < 0){
 			printf("Have to send packet one more time\n");
 
+		}
+		
+		dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
+		if(dnsResponseHeader->id != dnsHeader->id){
+			numberOfReceivedBytes = 0;
 		}
 
 		dns_sender__on_transfer_completed(DST_FILEPATH, strlen(data.inputData) * sizeof(char));
