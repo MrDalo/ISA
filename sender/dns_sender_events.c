@@ -236,7 +236,7 @@ int main(int argc, char *argv[]){
 	*	@link https://stackoverflow.com/questions/2876024/linux-is-there-a-read-or-recv-from-socket-with-timeout
 	*/
 	struct timeval timeOutOption;
-	timeOutOption.tv_sec = 1;
+	timeOutOption.tv_sec = 3;	//TTL for 3 seconds
 	timeOutOption.tv_usec = 0;
 	if(setsockopt(clientSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&timeOutOption, sizeof(timeOutOption)))
 	{

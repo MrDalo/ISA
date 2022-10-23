@@ -208,6 +208,38 @@ int main(int argc, char *argv[]){
 		unsigned char DST_DIRPATH_HELP[255]={'\0'};
 		strcpy(DST_DIRPATH_HELP, DST_DIRPATH);
 
+			//Prepare response
+		memset(responseBuffer, '\0', strlen(responseBuffer));
+			printf("EMPTY responebuff: %s\n", responseBuffer);
+		dnsResponseHeader = (struct DNS_HEADER *)&responseBuffer;
+		
+		dnsResponseHeader->id = header->id;
+		dnsResponseHeader->qr = htons(1); 
+		dnsResponseHeader->opcode = 0; 
+		dnsResponseHeader->aa = 0; 
+		dnsResponseHeader->tc = 0; 
+		dnsResponseHeader->rd = 1; 
+		dnsResponseHeader->ra = 0; 
+		dnsResponseHeader->z = 0;
+		dnsResponseHeader->ad = 0;
+		dnsResponseHeader->cd = 0;
+		dnsResponseHeader->rcode = 0;
+		dnsResponseHeader->q_count = htons(1); 
+		dnsResponseHeader->ans_count = 0;
+		// dnsResponseHeader->ans_count = htons(1);
+		dnsResponseHeader->auth_count = 0;
+		dnsResponseHeader->add_count = 0;
+
+		responseQname = (unsigned char*)&responseBuffer[sizeof(struct DNS_HEADER)];
+		memset(responseQname, '\0', strlen(responseQname));
+		strcat(responseQname, dns_query);
+		responseQinfo = (struct QUESTION*)&responseBuffer[sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname) + 1)];
+		
+		responseQinfo->qtype = htons(1); 
+		responseQinfo->qclass = htons(1); 
+
+		//TODO create DNS ANSWER
+
 
 			//INIT PACKET receiver
 		index = strstr(decodedData,"INITPATH[");
@@ -259,6 +291,14 @@ int main(int argc, char *argv[]){
 			}
 
 			dns_receiver__on_query_parsed(DST_DIRPATH_HELP, data);
+
+				//Send repsonse
+			if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
+
+				fprintf(stderr, "Error; SENDTO failed");
+				exit(1);
+			}
+
 			continue;
 		}
 
@@ -269,6 +309,14 @@ int main(int argc, char *argv[]){
 		if(index != NULL){
 			fclose(outputFile);
 			dns_receiver__on_transfer_completed(DST_DIRPATH_HELP, fileSize);
+
+				//Send repsonse
+			if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
+
+				fprintf(stderr, "Error; SENDTO failed");
+				exit(1);
+			}
+
 			continue;
 		}
 
@@ -277,44 +325,14 @@ int main(int argc, char *argv[]){
 		fprintf(outputFile,"%s", decodedData);
 		dns_receiver__on_chunk_received( &(clientAddr.sin_addr),DST_DIRPATH_HELP, header->id, numOfBytesReceived);
 
-			//Prepare and send repsonse
-		memset(responseBuffer, '\0', strlen(responseBuffer));
-			printf("EMPTY responebuff: %s\n", responseBuffer);
-		dnsResponseHeader = (struct DNS_HEADER *)&responseBuffer;
-		
-		dnsResponseHeader->id = header->id;
-		dnsResponseHeader->qr = htons(1); 
-		dnsResponseHeader->opcode = 0; 
-		dnsResponseHeader->aa = 0; 
-		dnsResponseHeader->tc = 0; 
-		dnsResponseHeader->rd = 1; 
-		dnsResponseHeader->ra = 0; 
-		dnsResponseHeader->z = 0;
-		dnsResponseHeader->ad = 0;
-		dnsResponseHeader->cd = 0;
-		dnsResponseHeader->rcode = 0;
-		dnsResponseHeader->q_count = htons(1); 
-		dnsResponseHeader->ans_count = 0;
-		// dnsResponseHeader->ans_count = htons(1);
-		dnsResponseHeader->auth_count = 0;
-		dnsResponseHeader->add_count = 0;
-
-		responseQname = (unsigned char*)&responseBuffer[sizeof(struct DNS_HEADER)];
-		memset(responseQname, '\0', strlen(responseQname));
-		strcat(responseQname, dns_query);
-		responseQinfo = (struct QUESTION*)&responseBuffer[sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname) + 1)];
-		
-		responseQinfo->qtype = htons(1); 
-		responseQinfo->qclass = htons(1); 
-
-		//TODO create DNS ANSWER
-		
-
+			//Send repsonse
 		if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
 
 			fprintf(stderr, "Error; SENDTO failed");
 			exit(1);
 		}
+		
+
 
 
 	}
