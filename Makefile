@@ -7,10 +7,10 @@ all: receiver sender clean
 
 
 receiver: base32.o dns_receiver_events.o
-	gcc $(CFLAGS) $^ -o dns_sender
+	gcc $(CFLAGS) $^ -o dns_receiver
 
 sender: base32.o dns_sender_events.o
-	gcc $(CFLAGS) $^ -o dns_receiver
+	gcc $(CFLAGS) $^ -o dns_sender
 
 
 # %.o: ./sender/dns_sender_events.c ./receiver/dns_receiver_events.c %.c
