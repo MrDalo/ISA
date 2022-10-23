@@ -80,7 +80,11 @@ void ChangeBufferToDNSFormat(char *buffer){
 	}
 }
 
-
+/**
+ *   @brief Function which convert domain na to DNS format
+ *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+ *   @author Silver Moon
+*/
 void ChangetoDnsNameFormat(char* dns, char* host) 
 {
 	int lock = 0 , i;
@@ -255,9 +259,9 @@ int main(int argc, char *argv[]){
 
 	/**
 	 * @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+	 * @author Silver Moon
 	 * @link https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 	*/
-	
 	struct sockaddr_in destination;
 	struct sockaddr_in serverAddr;
 	int clientSocket;

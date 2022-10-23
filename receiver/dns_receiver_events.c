@@ -60,7 +60,11 @@ void dns_receiver__on_transfer_completed(char *filePath, int fileSize)
 	fprintf(stderr, "[CMPL] %s of %dB\n", filePath, fileSize);
 }
 
-
+/**
+ *   @brief Function which convert domain na to DNS format
+ *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+ *   @author Silver Moon
+*/
 void ChangetoDnsNameFormat(char* dns, char* host) 
 {
 	int lock = 0 , i;
@@ -167,7 +171,6 @@ int main(int argc, char *argv[]){
 
 
 		struct DNS_HEADER *header = (struct DNS_HEADER *)&buffer;
-		// printf("HEDERID: %d\n", header->id);
 		char *dns_query = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 		
 			
@@ -242,14 +245,11 @@ int main(int argc, char *argv[]){
 
 		dnsResponseAnswer->ans_type = htons(1);
 		dnsResponseAnswer->name_offset = 0;
-		dnsResponseAnswer->type = htons(1); // check
+		dnsResponseAnswer->type = htons(1); 
 		dnsResponseAnswer->qclass = htons(1);
 		dnsResponseAnswer->ttl = 0;
 		dnsResponseAnswer->rdlength = 0;
 		dnsResponseAnswer->rdata = 0;
-
-
-		//TODO create DNS ANSWER
 
 
 			//INIT PACKET receiver
@@ -346,9 +346,6 @@ int main(int argc, char *argv[]){
 		}
 		dns_receiver__on_transfer_init(&(clientAddr.sin_addr));
 		
-
-
-
 	}
 
 	return 0;

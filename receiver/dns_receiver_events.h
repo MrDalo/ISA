@@ -6,6 +6,7 @@
 /**
  *   @brief DNS header structure
  *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+ *   @author Silver Moon
 */
 struct DNS_HEADER
 {
@@ -33,6 +34,8 @@ struct DNS_HEADER
 /**
  *   @brief DNS header structure
  *   @link https://github.com/tbenbrahim/dns-tunneling-poc/blob/main/src/dns.h
+ *   @license MIT
+ *   @author Copyright (c) 2021 Tony BenBrahim
 */
 struct DNS_ANSWER {
   uint8_t ans_type;
@@ -47,6 +50,7 @@ struct DNS_ANSWER {
 /**
  *   @brief Question structure
  *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+ *   @author Silver Moon
 */
 struct QUESTION
 {

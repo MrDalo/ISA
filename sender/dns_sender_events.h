@@ -6,6 +6,7 @@
 /**
  *   @brief DNS header structure
  *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+ *   @author Silver Moon
 */
 struct DNS_HEADER
 {
@@ -49,6 +50,7 @@ struct DNS_ANSWER {
 /**
  *   @brief Question structure
  *   @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+ *   @author Silver Moon
 */
 struct QUESTION
 {
