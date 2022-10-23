@@ -135,7 +135,7 @@ int main(int argc, char *argv[]){
 		fprintf(stderr, "ERROR: Failed to bind, %s\n", strerror(errno));
 		exit(1);
 	}
-	// printf("Binding succesfull\n");
+	fprintf(stderr, "Binding succesfull\n");
 
 	int lenght = sizeof(clientAddr);
 	int numOfBytesReceived = 0;
@@ -207,14 +207,12 @@ int main(int argc, char *argv[]){
 			//Decoding data from received packet		
 		base32_decode(data, decodedData, 253);
 
-
 		unsigned char DST_FILEPATH[255]={'\0'};
 		unsigned char DST_DIRPATH_HELP[255]={'\0'};
 		strcpy(DST_DIRPATH_HELP, DST_DIRPATH);
 
 			//Prepare response
 		memset(responseBuffer, '\0', strlen(responseBuffer));
-			printf("EMPTY responebuff: %s\n", responseBuffer);
 		dnsResponseHeader = (struct DNS_HEADER *)&responseBuffer;
 		
 		dnsResponseHeader->id = header->id;
@@ -257,9 +255,11 @@ int main(int argc, char *argv[]){
 		if(index != NULL){
 
 
+			printf("decodeddata2: %s\n", decodedData);
 			int j = 0;
+
 				//Extract file PATH from decodedData
-			for(int i = 9; i < (strlen(decodedData)-1); i++){
+			for(int i = 9; decodedData[i] != ']'; i++){
 
 				DST_FILEPATH[j] = decodedData[i];
 				j++;
