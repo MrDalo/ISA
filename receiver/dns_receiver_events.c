@@ -226,8 +226,7 @@ int main(int argc, char *argv[]){
 		dnsResponseHeader->cd = 0;
 		dnsResponseHeader->rcode = 0;
 		dnsResponseHeader->q_count = htons(1); 
-		dnsResponseHeader->ans_count = 0;
-		// dnsResponseHeader->ans_count = htons(1);
+		dnsResponseHeader->ans_count = htons(1);
 		dnsResponseHeader->auth_count = 0;
 		dnsResponseHeader->add_count = 0;
 
