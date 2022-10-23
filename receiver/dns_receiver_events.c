@@ -149,6 +149,7 @@ int main(int argc, char *argv[]){
 	struct DNS_HEADER *dnsResponseHeader = NULL;
 	unsigned char *responseQname = NULL;
 	struct QUESTION *responseQinfo = NULL;
+	struct DNS_ANSWER *dnsResponseAnswer = NULL;
 
 	while(true){
 		memset(buffer, '\0', strlen(buffer));
@@ -238,6 +239,17 @@ int main(int argc, char *argv[]){
 		responseQinfo->qtype = htons(1); 
 		responseQinfo->qclass = htons(1); 
 
+		dnsResponseAnswer = (struct DNS_ANSWER*)&responseBuffer[sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname) + 1) + sizeof(struct QUESTION)];
+
+		dnsResponseAnswer->ans_type = htons(1);
+		dnsResponseAnswer->name_offset = 0;
+		dnsResponseAnswer->type = htons(1); // check
+		dnsResponseAnswer->qclass = htons(1);
+		dnsResponseAnswer->ttl = 0;
+		dnsResponseAnswer->rdlength = 0;
+		dnsResponseAnswer->rdata = 0;
+
+
 		//TODO create DNS ANSWER
 
 
@@ -293,7 +305,7 @@ int main(int argc, char *argv[]){
 			dns_receiver__on_query_parsed(DST_DIRPATH_HELP, data);
 
 				//Send repsonse
-			if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
+			if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION) + sizeof(struct DNS_ANSWER), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
 
 				fprintf(stderr, "Error; SENDTO failed");
 				exit(1);
@@ -311,7 +323,7 @@ int main(int argc, char *argv[]){
 			dns_receiver__on_transfer_completed(DST_DIRPATH_HELP, fileSize);
 
 				//Send repsonse
-			if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
+			if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION) + sizeof(struct DNS_ANSWER), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
 
 				fprintf(stderr, "Error; SENDTO failed");
 				exit(1);
@@ -326,7 +338,7 @@ int main(int argc, char *argv[]){
 		dns_receiver__on_chunk_received( &(clientAddr.sin_addr),DST_DIRPATH_HELP, header->id, numOfBytesReceived);
 
 			//Send repsonse
-		if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
+		if(sendto(serverSocket, (unsigned char*)responseBuffer, sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname)+1) + sizeof(struct QUESTION) + sizeof(struct DNS_ANSWER), 0, (struct sockaddr*)&clientAddr, sizeof(clientAddr)) < 0){
 
 			fprintf(stderr, "Error; SENDTO failed");
 			exit(1);

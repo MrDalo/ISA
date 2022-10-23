@@ -324,7 +324,7 @@ int main(int argc, char *argv[]){
 
 			//If TTL of the socket runs out, The program will send packet one more time 
 		if(numberOfReceivedBytes < 0){
-			printf("Have to send packet one more time\n");
+			fprintf(stderr, "Have to send packet one more time\n");
 
 		}
 	
@@ -378,7 +378,7 @@ int main(int argc, char *argv[]){
 		ChangeBufferToDNSFormat(base32_data_buf);
 		strcat(qname, base32_data_buf);
 		strcat(qname, baseHostForQname);
-		printf("buffer WITH ALL: %s\n", buffer);
+		// printf("buffer WITH ALL: %s\n", buffer);
 		dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
 		
 		qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
@@ -400,7 +400,7 @@ int main(int argc, char *argv[]){
 
 			//If TTL of the socket runs out, The program will send packet one more time 
 		if(numberOfReceivedBytes < 0){
-			printf("Have to send packet one more time\n");
+			fprintf(stderr, "Have to send packet one more time\n");
 
 		}
 		else{
@@ -486,7 +486,7 @@ int main(int argc, char *argv[]){
 
 			//If TTL of the socket runs out, The program will send packet one more time 
 		if(numberOfReceivedBytes < 0){
-			printf("Have to send packet one more time\n");
+			fprintf(stderr, "Have to send packet one more time\n");
 
 		}
 		
