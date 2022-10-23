@@ -105,6 +105,73 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 }
 
 
+/**
+* @brief Function which will set up DNS header
+* @param dnsHeader Data struct contains attributes of DNS header
+* @param packetCounter Number of packet which have been alredy sent
+*/
+void SetUpHeader(struct DNS_HEADER *dnsHeader, int packetCounter){
+	dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+	dnsHeader->qr = 0; 
+	dnsHeader->opcode = 0; 
+	dnsHeader->aa = 0; 
+	dnsHeader->tc = 0; 
+	dnsHeader->rd = 1; 
+	dnsHeader->ra = 0; 
+	dnsHeader->z = 0;
+	dnsHeader->ad = 0;
+	dnsHeader->cd = 0;
+	dnsHeader->rcode = 0;
+	dnsHeader->q_count = htons(1); 
+	dnsHeader->ans_count = 0;
+	dnsHeader->auth_count = 0;
+	dnsHeader->add_count = 0;
+}
+
+
+/**
+* @brief Function which read data from stdin or from file
+* @param data Data structure which contains progarm data
+* @param SRC_FILEPATH Contains file path of the file
+* @param readFromFILE Boolean variable which says if the program should read data from stdin or file
+*/
+void ReadInputDataToDataStructure(struct dataStruct *data, FILE* SRC_FILEPATH, bool readFromFILE){
+	int character;
+	if(!readFromFILE){
+		while((character = getc(stdin)) != EOF){
+
+			if(data->allocatedSpace == data->currentSpace){
+				if((data->inputData = realloc(data->inputData, sizeof(char)*2*data->allocatedSpace)) == NULL){
+					fprintf(stderr, "INTERNAL ERROR: Realloc error\n");
+				}
+				data->allocatedSpace*=2;
+			}
+
+			data->inputData[data->currentSpace] = character;
+			data->currentSpace++;
+		}
+	}
+	else{
+		while((character = getc(SRC_FILEPATH)) != EOF){
+
+			if(data->allocatedSpace == data->currentSpace){
+				if((data->inputData = realloc(data->inputData, sizeof(char)*2*data->allocatedSpace)) == NULL){
+					fprintf(stderr, "INTERNAL ERROR: Realloc error\n");
+				}
+				data->allocatedSpace*=2;
+			}
+
+			data->inputData[data->currentSpace] = character;
+			data->currentSpace++;
+		}
+
+	}
+
+}
+
+/**
+*	@brief Main function of the program
+*/
 int main(int argc, char *argv[]){
 
 		//Prepare structure for loading data from FILE/STDIN
@@ -181,41 +248,14 @@ int main(int argc, char *argv[]){
 		paramerProccessed++;
 	}
 
-		//Process input. Reading from stdin or text file
-	int character;
-	if(!readFromFILE){
-		while((character = getc(stdin)) != EOF){
-
-			if(data.allocatedSpace == data.currentSpace){
-				if((data.inputData = realloc(data.inputData, sizeof(char)*2*data.allocatedSpace)) == NULL){
-					fprintf(stderr, "INTERNAL ERROR: Realloc error\n");
-				}
-				data.allocatedSpace*=2;
-			}
-
-			data.inputData[data.currentSpace] = character;
-			data.currentSpace++;
-		}
-	}
-	else{
-		while((character = getc(SRC_FILEPATH)) != EOF){
-
-			if(data.allocatedSpace == data.currentSpace){
-				if((data.inputData = realloc(data.inputData, sizeof(char)*2*data.allocatedSpace)) == NULL){
-					fprintf(stderr, "INTERNAL ERROR: Realloc error\n");
-				}
-				data.allocatedSpace*=2;
-			}
-
-			data.inputData[data.currentSpace] = character;
-			data.currentSpace++;
-		}
-
-	}
+	//Process input. Reading from stdin or text file
+	ReadInputDataToDataStructure(&data, SRC_FILEPATH, readFromFILE);
 
 	
+
 	/**
 	 * @link https://www.binarytides.com/dns-query-code-in-c-with-linux-sockets/
+	 * @link https://www.geeksforgeeks.org/udp-server-client-implementation-c/
 	*/
 	
 	struct sockaddr_in destination;
@@ -270,22 +310,8 @@ int main(int argc, char *argv[]){
 		int serverAddrLength = sizeof(serverAddr);
 
 			//Prepare header
-		dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+		SetUpHeader(dnsHeader, packetCounter);
 		packetCounter++;
-		dnsHeader->qr = 0; 
-		dnsHeader->opcode = 0; 
-		dnsHeader->aa = 0; 
-		dnsHeader->tc = 0; 
-		dnsHeader->rd = 1; 
-		dnsHeader->ra = 0; 
-		dnsHeader->z = 0;
-		dnsHeader->ad = 0;
-		dnsHeader->cd = 0;
-		dnsHeader->rcode = 0;
-		dnsHeader->q_count = htons(1); 
-		dnsHeader->ans_count = 0;
-		dnsHeader->auth_count = 0;
-		dnsHeader->add_count = 0;
 
 		unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 		
@@ -295,6 +321,7 @@ int main(int argc, char *argv[]){
 		
 		
 		sprintf(initData, "INITPATH[%s]", DST_FILEPATH);
+			// -4 because of 4x dot for hexa conversion
 		int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
 				
 				
@@ -327,7 +354,7 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Have to send packet one more time\n");
 
 		}
-	
+			//Check if the response is for the sent packet by ID
 		dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
 		if(dnsResponseHeader->id != dnsHeader->id){
 			numberOfReceivedBytes = 0;
@@ -346,23 +373,10 @@ int main(int argc, char *argv[]){
 		int serverAddrLength = sizeof(serverAddr);
 		dnsHeader = (struct DNS_HEADER *)&buffer;
 
-			//Prepare DNS header	
-		dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+			//Prepare header
+		SetUpHeader(dnsHeader, packetCounter);
 		packetCounter++;
-		dnsHeader->qr = 0; 
-		dnsHeader->opcode = 0; 
-		dnsHeader->aa = 0; 
-		dnsHeader->tc = 0; 
-		dnsHeader->rd = 1; 
-		dnsHeader->ra = 0; 
-		dnsHeader->z = 0;
-		dnsHeader->ad = 0;
-		dnsHeader->cd = 0;
-		dnsHeader->rcode = 0;
-		dnsHeader->q_count = htons(1); 
-		dnsHeader->ans_count = 0;
-		dnsHeader->auth_count = 0;
-		dnsHeader->add_count = 0;
+
 
 		unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
 
@@ -378,7 +392,6 @@ int main(int argc, char *argv[]){
 		ChangeBufferToDNSFormat(base32_data_buf);
 		strcat(qname, base32_data_buf);
 		strcat(qname, baseHostForQname);
-		// printf("buffer WITH ALL: %s\n", buffer);
 		dns_sender__on_chunk_encoded(DST_FILEPATH, dnsHeader->id, qname);
 		
 		qinfo =(struct QUESTION*)&buffer[sizeof(struct DNS_HEADER) + (strlen((const char*)qname) + 1)];
@@ -406,7 +419,6 @@ int main(int argc, char *argv[]){
 		else{
 			dnsResponseHeader = (struct DNS_HEADER *)&receivedBuffer;
 
-			// printf("Response Header ID: %d\n", dnsResponseHeader->id);
 			if(dnsResponseHeader->id != dnsHeader->id){
 				continue;
 			}
@@ -429,30 +441,15 @@ int main(int argc, char *argv[]){
 	
 	}
 
-	numberOfReceivedBytes = 0;
 		//FINAL PACKET
+	numberOfReceivedBytes = 0;
 	while(numberOfReceivedBytes <= 0){
 		memset(buffer,'\0', 512);
 		int serverAddrLength = sizeof(serverAddr);
 
-		dnsHeader->id = (unsigned short) htons(getpid() + packetCounter);
+			//Prepare header
+		SetUpHeader(dnsHeader, packetCounter);
 		packetCounter++;
-		dnsHeader->rd = 1; 
-		dnsHeader->q_count = htons(1); 
-		dnsHeader->qr = 0; 
-		dnsHeader->opcode = 0; 
-		dnsHeader->aa = 0; 
-		dnsHeader->tc = 0; 
-		dnsHeader->rd = 1; 
-		dnsHeader->ra = 0; 
-		dnsHeader->z = 0;
-		dnsHeader->ad = 0;
-		dnsHeader->cd = 0;
-		dnsHeader->rcode = 0;
-		dnsHeader->q_count = htons(1); 
-		dnsHeader->ans_count = 0;
-		dnsHeader->auth_count = 0;
-		dnsHeader->add_count = 0;
 
 		memset(initData, '\0', 254);
 		memset(base32_data_buf,'\0', 254);

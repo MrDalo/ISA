@@ -32,6 +32,8 @@ struct DNS_HEADER
 /**
  *   @brief DNS header structure
  *   @link https://github.com/tbenbrahim/dns-tunneling-poc/blob/main/src/dns.h
+ *   @license MIT
+ *   @author Copyright (c) 2021 Tony BenBrahim
 */
 struct DNS_ANSWER {
   uint8_t ans_type;

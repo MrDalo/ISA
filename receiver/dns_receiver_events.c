@@ -309,6 +309,7 @@ int main(int argc, char *argv[]){
 				fprintf(stderr, "Error; SENDTO failed");
 				exit(1);
 			}
+			dns_receiver__on_transfer_init(&(clientAddr.sin_addr));
 
 			continue;
 		}
@@ -327,6 +328,7 @@ int main(int argc, char *argv[]){
 				fprintf(stderr, "Error; SENDTO failed");
 				exit(1);
 			}
+			dns_receiver__on_transfer_init(&(clientAddr.sin_addr));
 
 			continue;
 		}
@@ -342,6 +344,7 @@ int main(int argc, char *argv[]){
 			fprintf(stderr, "Error; SENDTO failed");
 			exit(1);
 		}
+		dns_receiver__on_transfer_init(&(clientAddr.sin_addr));
 		
 
 
