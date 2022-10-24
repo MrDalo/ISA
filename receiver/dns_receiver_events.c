@@ -69,8 +69,6 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 {
 	int lock = 0 , i;
 	strcat((char*)host,".");
-	char help[5];
-	unsigned char *ptr = NULL;
 	
 	for(i = 0 ; i < strlen((char*)host) ; i++) 
 	{
@@ -98,13 +96,13 @@ int main(int argc, char *argv[]){
 	}
 		//Process arguments of the program
 	char* BASE_HOST = argv[1];
-	unsigned char DST_DIRPATH[255]={'\0'};
+	char DST_DIRPATH[255]={'\0'};
 	strcpy(DST_DIRPATH, argv[2]);
 
 
 	int serverSocket;
-	unsigned char buffer[512];
-	unsigned char responseBuffer[512] ={'\0'};
+	char buffer[512];
+	char responseBuffer[512] ={'\0'};
 	struct sockaddr_in serverAddr, clientAddr;
 
 
@@ -146,32 +144,32 @@ int main(int argc, char *argv[]){
 		//Process receiving data packets
 	FILE *outputFile;
 	int fileSize = 0;
-	unsigned char data[253];
-	unsigned char help1Data[253];
-	unsigned char help2Data[253] ={'\0'};
-	unsigned char decodedData[253] ={'\0'};
+	char data[253];
+	char help1Data[253];
+	char help2Data[253] ={'\0'};
+	char decodedData[253] ={'\0'};
 	struct DNS_HEADER *dnsResponseHeader = NULL;
-	unsigned char *responseQname = NULL;
+	char *responseQname = NULL;
 	struct QUESTION *responseQinfo = NULL;
 	struct DNS_ANSWER *dnsResponseAnswer = NULL;
 
 	while(true){
 		memset(buffer, '\0', strlen(buffer));
 
-		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr, &lenght);
+		numOfBytesReceived = recvfrom(serverSocket, (unsigned char *)buffer, 512, MSG_WAITALL , (struct sockaddr *)&clientAddr,(unsigned int *)&lenght);
 		if(numOfBytesReceived < 0){
 			fprintf(stderr, "Error in recvfrom function. Didn.t receive data packet\n");
 			exit(1);
 		}
 
 			//Extract client IP address
-		unsigned char client_addr_str[INET_ADDRSTRLEN];
+		char client_addr_str[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientAddr.sin_addr), client_addr_str, INET_ADDRSTRLEN);
 		printf("---------------------------\nReceived %d bytes from %s\n",  numOfBytesReceived, client_addr_str);
 
 
 		struct DNS_HEADER *header = (struct DNS_HEADER *)&buffer;
-		char *dns_query = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+		char *dns_query = (char*)&buffer[sizeof(struct DNS_HEADER)];
 		
 			
 			//Check if dns_query coontains BASE_HOST
@@ -205,10 +203,10 @@ int main(int argc, char *argv[]){
 		strcpy(data, help2Data);
 
 			//Decoding data from received packet		
-		base32_decode(data, decodedData, 253);
+		base32_decode((unsigned char *)data,(unsigned char *)decodedData, 253);
 
-		unsigned char DST_FILEPATH[255]={'\0'};
-		unsigned char DST_DIRPATH_HELP[255]={'\0'};
+		char DST_FILEPATH[255]={'\0'};
+		char DST_DIRPATH_HELP[255]={'\0'};
 		strcpy(DST_DIRPATH_HELP, DST_DIRPATH);
 
 			//Prepare response
@@ -231,7 +229,7 @@ int main(int argc, char *argv[]){
 		dnsResponseHeader->auth_count = 0;
 		dnsResponseHeader->add_count = 0;
 
-		responseQname = (unsigned char*)&responseBuffer[sizeof(struct DNS_HEADER)];
+		responseQname = (char*)&responseBuffer[sizeof(struct DNS_HEADER)];
 		memset(responseQname, '\0', strlen(responseQname));
 		strcat(responseQname, dns_query);
 		responseQinfo = (struct QUESTION*)&responseBuffer[sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname) + 1)];
@@ -274,19 +272,20 @@ int main(int argc, char *argv[]){
 
 
 				//Create STRING which represent command for creating FOLDER PATH
-			unsigned char DST_DIRPATH_COMMAND[265];
+			char DST_DIRPATH_COMMAND[265];
 			sprintf(DST_DIRPATH_COMMAND, "mkdir -p %s", DST_DIRPATH_HELP); 
 
 
 				//Removing file nam from the PATH
-			int i = strlen(DST_DIRPATH_COMMAND)-1;
-			for(i; i >= 0; i--){
+			int iter = 0;
+			for(int i = strlen(DST_DIRPATH_COMMAND)-1 ; i >= 0; i--){
+				iter = i;
 				if(DST_DIRPATH_COMMAND[i] == '/'){
 					break;
 				}
 			}
 
-			for(i; i< strlen(DST_DIRPATH_COMMAND); i++){
+			for(int i = iter; i< strlen(DST_DIRPATH_COMMAND); i++){
 				DST_DIRPATH_COMMAND[i] = '\0';
 			}
 

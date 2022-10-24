@@ -64,7 +64,7 @@ void dns_sender__on_transfer_completed( char *filePath, int fileSize)
 
 void ChangeBufferToDNSFormat(char *buffer){
 
-	int lock = 0 , i, j, numberOfMovedChars;
+	int i, j, numberOfMovedChars;
 	
 	for( i = 0; i < strlen((char *)buffer); i++){
 		
@@ -89,8 +89,6 @@ void ChangetoDnsNameFormat(char* dns, char* host)
 {
 	int lock = 0 , i;
 	strcat((char*)host,".");
-	char help[5];
-	unsigned char *ptr = NULL;
 	
 	for(i = 0 ; i < strlen((char*)host) ; i++) 
 	{
@@ -294,15 +292,14 @@ int main(int argc, char *argv[]){
 
 		//Init variables needed in packet sending and receiving
 	int numberOfReceivedBytes = 0;
-	unsigned char buffer[512] = {'\0'};
-	unsigned char receivedBuffer[512] ={'\0'};
+	char buffer[512] = {'\0'};
+	char receivedBuffer[512] ={'\0'};
 	struct DNS_HEADER *dnsHeader = NULL;
 	struct DNS_HEADER *dnsResponseHeader = NULL;
 	dnsHeader = (struct DNS_HEADER *)&buffer;
-	unsigned char base32_data_buf[254] = {'\0'};
-	unsigned char initData[254] = {'\0'};
-	unsigned char baseHostForQname[253] ={'\0'};
-	int numberOfWritenChars = 0;
+	char base32_data_buf[254] = {'\0'};
+	char initData[254] = {'\0'};
+	char baseHostForQname[253] ={'\0'};
 	struct QUESTION *qinfo = NULL;
 
 		//INIT PACKET
@@ -317,7 +314,7 @@ int main(int argc, char *argv[]){
 		SetUpHeader(dnsHeader, packetCounter);
 		packetCounter++;
 
-		unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+		char *qname = (char*)&buffer[sizeof(struct DNS_HEADER)];
 		
 
 			//Change BASE_HOST to DNS format
@@ -325,12 +322,9 @@ int main(int argc, char *argv[]){
 		
 		
 		sprintf(initData, "INITPATH[%s]", DST_FILEPATH);
-			// -4 because of 4x dot for hexa conversion
-		int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
-				
 				
 			//Encoding data
-		numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
+		base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
 		ChangeBufferToDNSFormat(base32_data_buf);
 
 		strcat(qname, base32_data_buf);
@@ -351,7 +345,7 @@ int main(int argc, char *argv[]){
 	
 		dns_sender__on_transfer_init(&(destination.sin_addr));
 
-		numberOfReceivedBytes = recvfrom(clientSocket, (unsigned char *)receivedBuffer, 512, MSG_WAITALL, (struct sockaddr *)&serverAddr, &serverAddrLength);
+		numberOfReceivedBytes = recvfrom(clientSocket, (unsigned char *)receivedBuffer, 512, MSG_WAITALL, (struct sockaddr *)&serverAddr,(unsigned int *) &serverAddrLength);
 
 			//If TTL of the socket runs out, The program will send packet one more time 
 		if(numberOfReceivedBytes < 0){
@@ -382,14 +376,13 @@ int main(int argc, char *argv[]){
 		packetCounter++;
 
 
-		unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+		char *qname = (char*)&buffer[sizeof(struct DNS_HEADER)];
 
 		memset(base32_data_buf,'\0', 254);
-			// -4 because of 4x dot for hexa conversion
 		int neededDataLength = BASE32_LENGTH_DECODE(253-strlen(baseHostForQname) - 4);
 
 			//Encoding data
-		numberOfWritenChars = base32_encode((uint8_t *)data.inputData, strlen(data.inputData) >= neededDataLength ? neededDataLength : strlen(data.inputData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(data.inputData) >= neededDataLength ? neededDataLength : strlen(data.inputData)));
+		base32_encode((uint8_t *)data.inputData, strlen(data.inputData) >= neededDataLength ? neededDataLength : strlen(data.inputData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(data.inputData) >= neededDataLength ? neededDataLength : strlen(data.inputData)));
 		
 
 			//Convert encoded data into DNS format		
@@ -413,7 +406,7 @@ int main(int argc, char *argv[]){
 
 
 
-		numberOfReceivedBytes = recvfrom(clientSocket, (unsigned char *)receivedBuffer, 512, MSG_WAITALL, (struct sockaddr *)&serverAddr, &serverAddrLength);
+		numberOfReceivedBytes = recvfrom(clientSocket, (unsigned char *)receivedBuffer, 512, MSG_WAITALL, (struct sockaddr *)&serverAddr,(unsigned int *) &serverAddrLength);
 
 			//If TTL of the socket runs out, The program will send packet one more time 
 		if(numberOfReceivedBytes < 0){
@@ -460,12 +453,11 @@ int main(int argc, char *argv[]){
 		sprintf(initData, "[ENDPACKET]");
 
 			//ENCODE data	
-		numberOfWritenChars = base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
+		base32_encode((uint8_t *)initData, strlen(initData), (uint8_t *)base32_data_buf, BASE32_LENGTH_ENCODE(strlen(initData)));
 
-		unsigned char decodedData[254]={'\0'};
 			//Change encoded data into DNS format
 		ChangeBufferToDNSFormat(base32_data_buf);
-		unsigned char *qname = (unsigned char*)&buffer[sizeof(struct DNS_HEADER)];
+		char *qname = (char*)&buffer[sizeof(struct DNS_HEADER)];
 
 		strcat(qname, base32_data_buf);
 		strcat(qname, baseHostForQname);
@@ -483,7 +475,7 @@ int main(int argc, char *argv[]){
 			exit(1);
 		}
 
-		numberOfReceivedBytes = recvfrom(clientSocket, (unsigned char *)receivedBuffer, 512, MSG_WAITALL, (struct sockaddr *)&serverAddr, &serverAddrLength);
+		numberOfReceivedBytes = recvfrom(clientSocket, (unsigned char *)receivedBuffer, 512, MSG_WAITALL, (struct sockaddr *)&serverAddr,(unsigned int *) &serverAddrLength);
 
 			//If TTL of the socket runs out, The program will send packet one more time 
 		if(numberOfReceivedBytes < 0){
