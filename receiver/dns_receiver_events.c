@@ -214,7 +214,7 @@ int main(int argc, char *argv[]){
 		dnsResponseHeader = (struct DNS_HEADER *)&responseBuffer;
 		
 		dnsResponseHeader->id = header->id;
-		dnsResponseHeader->qr = htons(1); 
+		dnsResponseHeader->qr =(unsigned char) htons(1); 
 		dnsResponseHeader->opcode = 0; 
 		dnsResponseHeader->aa = 0; 
 		dnsResponseHeader->tc = 0; 
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]){
 
 		dnsResponseAnswer = (struct DNS_ANSWER*)&responseBuffer[sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname) + 1) + sizeof(struct QUESTION)];
 
-		dnsResponseAnswer->ans_type = htons(1);
+		dnsResponseAnswer->ans_type =(unsigned char) htons(1);
 		dnsResponseAnswer->name_offset = 0;
 		dnsResponseAnswer->type = htons(1); 
 		dnsResponseAnswer->qclass = htons(1);
