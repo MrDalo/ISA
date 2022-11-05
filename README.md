@@ -18,7 +18,7 @@
 <br/> -> **{BASE_HOST}** serves to set up base domain for receiving DNS packets
 <br/> -> **{DST_DIRPATH}** serves to set up path for the folder/file with received data <br/><br/>
 3. &nbsp; `dns_sender [-u UPSTREM_DNS_IP] {BASE_HOST} {DST_FILEPATH} [SRC_FILEPATH]`<br/> &nbsp; Open second terminal in the root folder and type command<br/><br/>
-&nbsp; `dns_sender -u 127.0.0.1 example.com output/data.txt ./data.txt`<br/>
+&nbsp; `$./dns_sender -u 127.0.0.1 example.com output/data.txt ./data.txt`<br/>
 <br/> -> **-u** serves to set up force remote DNS server connection
 <br/> -> **{BASE_HOST}** serves to set up base domain for sending DNS packets
 <br/> -> **{DST_FILEPATH}** serves to set up path for the file with received data
