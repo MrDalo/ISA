@@ -165,7 +165,6 @@ int main(int argc, char *argv[]){
 			//Extract client IP address
 		char client_addr_str[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientAddr.sin_addr), client_addr_str, INET_ADDRSTRLEN);
-		printf("---------------------------\nReceived %d bytes from %s\n",  numOfBytesReceived, client_addr_str);
 
 
 		struct DNS_HEADER *header = (struct DNS_HEADER *)&buffer;
@@ -253,7 +252,6 @@ int main(int argc, char *argv[]){
 		if(index != NULL){
 
 
-			printf("decodeddata2: %s\n", decodedData);
 			int j = 0;
 
 				//Extract file PATH from decodedData
