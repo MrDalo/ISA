@@ -253,6 +253,8 @@ int main(int argc, char *argv[]){
 	//Process input. Reading from stdin or text file
 	ReadInputDataToDataStructure(&data, SRC_FILEPATH, readFromFILE);
 
+	int fileSize = strlen(data.inputData) * sizeof(char);
+
 	
 
 	/**
@@ -488,7 +490,7 @@ int main(int argc, char *argv[]){
 			numberOfReceivedBytes = 0;
 		}
 
-		dns_sender__on_transfer_completed(DST_FILEPATH, strlen(data.inputData) * sizeof(char));
+		dns_sender__on_transfer_completed(DST_FILEPATH, fileSize);
 	}
 
 	return 0;

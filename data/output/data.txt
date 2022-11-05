@@ -1,0 +1,1 @@
+Toto je testovaci DNS packet pre DNS receiver, ktory ho ma desifrovat a spracovat
