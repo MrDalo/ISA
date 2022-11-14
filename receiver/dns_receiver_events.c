@@ -213,7 +213,7 @@ int main(int argc, char *argv[]){
 		dnsResponseHeader = (struct DNS_HEADER *)&responseBuffer;
 		
 		dnsResponseHeader->id = header->id;
-		dnsResponseHeader->qr =(unsigned char) htons(1); 
+		dnsResponseHeader->qr =(unsigned char)(1); 
 		dnsResponseHeader->opcode = 0; 
 		dnsResponseHeader->aa = 0; 
 		dnsResponseHeader->tc = 0; 
@@ -238,12 +238,12 @@ int main(int argc, char *argv[]){
 
 		dnsResponseAnswer = (struct DNS_ANSWER*)&responseBuffer[sizeof(struct DNS_HEADER) + (strlen((const char*)responseQname) + 1) + sizeof(struct QUESTION)];
 
-		dnsResponseAnswer->ans_type =(unsigned char) htons(1);
-		dnsResponseAnswer->name_offset = 0;
-		dnsResponseAnswer->type = htons(1); 
-		dnsResponseAnswer->qclass = htons(1);
+		dnsResponseAnswer->ans_type = 0xc0;
+		dnsResponseAnswer->name_offset = 0x0c;
+		dnsResponseAnswer->type = htons(0x01); 
+		dnsResponseAnswer->qclass = htons(0x0001);
 		dnsResponseAnswer->ttl = 0;
-		dnsResponseAnswer->rdlength = 0;
+		dnsResponseAnswer->rdlength = htons(4);
 		dnsResponseAnswer->rdata = 0;
 
 
@@ -293,7 +293,7 @@ int main(int argc, char *argv[]){
 
 
 				//Open file for writing, if not created then create
-			if((outputFile = fopen(DST_DIRPATH_HELP, "w")) == NULL){
+			if((outputFile = fopen(DST_DIRPATH_HELP, "wr")) == NULL){
 				fprintf(stderr, "Error: Can't open output file \n");
 				exit(1);
 			}
